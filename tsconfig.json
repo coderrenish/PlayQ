@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "baseUrl": "./",
+        "lib": [
+            "es2021",
+            "dom"
+         ],
+        "typeRoots": [
+            "./node_modules/@types",
+            "./src/helper/types"       
+         ],
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "paths": {
+            "@src/*": ["src/*"],
+            "@helper/*": ["src/helper/*"],
+            "@resources/*": ["resources/*"]
+        }
+    },
+    "include": ["src", "test"]
+}
