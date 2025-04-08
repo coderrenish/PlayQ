@@ -1,9 +1,9 @@
 import { expect, Page } from "@playwright/test";
 import PlaywrightWrapper from "../../src/helper/wrapper/PlaywrightWrappers";
 // import { fixture } from "../../src/hooks/pageFixture";
-import { vars, loc, uiFixture } from '@src/global';
+import { vars, loc, webFixture } from '@src/global';
 
-const page = uiFixture.getCurrentPage();
+// const page = webFixture.getCurrentPage();
 
 
 export default class RegisterPage {

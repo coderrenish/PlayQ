@@ -9,7 +9,7 @@ import * as data from "../../src/helper/util/test-data/registerUser.json";
 // const { getVar, setVar } = globalThis.getBundle;
 // import { getVar, setVar } from '@helper/bundle/vars';
 // import { loc } from '@src/helper/loc';
-import { vars, loc, uiFixture } from '@src/global';
+import { vars, loc, webFixture } from '@src/global';
 
 const { getVar, setVar } = vars;
 
@@ -18,8 +18,8 @@ let assert: Assert;
 // const page = uiFixture.getCurrentPage();
 
 Given("I navigate to the register page", async function () {
-  registerPage = new RegisterPage(uiFixture.getCurrentPage());
-  assert = new Assert(uiFixture.getCurrentPage());
+  registerPage = new RegisterPage(webFixture.getCurrentPage());
+  assert = new Assert(webFixture.getCurrentPage());
   await registerPage.navigateToRegisterPage();
 });
 
@@ -46,11 +46,16 @@ Given('I login using {param} and {string}', async function (username, password) 
 
   // uiFixture.setPage(page);
   // const page = uiFixture.getCurrentPage();
-  const page = uiFixture.getCurrentPage();
+  const page = webFixture.getCurrentPage();
 if (!page) {
   throw new Error("❌ Page is not initialized. Did you forget to call uiFixture.setPage()?");
 }
   await page.goto("https://www.jotform.com/form-templates/preview/223393028066960/classic");
-  (await loc('input', 'Last Name')).fill("Test Feed back");
-  await uiFixture.getCurrentPage().waitForTimeout(3000);
+  // (await loc('input', 'Last Name')).fill("Test Feed back");
+  // await uiFixture.getCurrentPage().waitForTimeout(3000);
 });
+
+Given ('Reusable Steps: {param}', async function (steps) {
+  // Reusable Steps
+});
+

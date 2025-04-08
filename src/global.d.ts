@@ -1,6 +1,6 @@
 import type * as varsType from './helper/bundle/vars';
 import type { loc as locType } from './helper/loc';
-import type { uiFixture as uiFixtureType } from './hooks/uiFixture'; // ✅ Use the actual type
+import type { webFixture as webFixtureType } from './hooks/webFixture'; // ✅ Use the actual type
 import type { logFixture as logFixtureType } from './hooks/logFixture';
 
 export {};
@@ -9,7 +9,7 @@ declare global {
   var runType: 'ui' | 'api' | 'mobile';
   var vars: typeof varsType;
   var loc: typeof locType;
-  var uiFixture: typeof uiFixtureType; // ✅ Use the actual type
+  var webFixture: typeof webFixtureType; // ✅ Use the actual type
   var logFixture: typeof logFixtureType;
 }
 

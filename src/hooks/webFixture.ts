@@ -11,7 +11,7 @@ let currentPageName = "main";
 let browser: Browser;
 let context: BrowserContext;
 
-export const uiFixture = {
+export const webFixture = {
   pages,
   frames,
   async launchBrowser() {

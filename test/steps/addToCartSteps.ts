@@ -3,8 +3,8 @@ import { Given, When, Then, setDefaultTimeout } from "@cucumber/cucumber";
 setDefaultTimeout(60 * 1000 * 2)
 
 import { expect } from "@playwright/test";
-import { uiFixture } from "../../src/hooks/uiFixture";
-const page = uiFixture.getCurrentPage();
+import { webFixture } from "@src/global";
+const page = webFixture.getCurrentPage();
 
 
 Given('user search for a {string}', async function (book) {

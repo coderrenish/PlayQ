@@ -2,7 +2,7 @@ import { Page, Locator } from "@playwright/test";
 // import { locPatternEntries } from "../../resources/locatorPattern";
 import { locPatternEntries } from "@resources/locatorPattern";
 // import { vars, fixture } from '@src/global';
-import { vars, uiFixture } from '@src/global';
+import { vars, webFixture } from '@src/global';
 
 
 const loggingStatus = true; // Set to true to enable logging
@@ -336,23 +336,23 @@ export async function loc(
   field: string
 ): Promise<Locator> {
   // Wait for the page to load fully
-  await uiFixture.getCurrentPage().waitForLoadState("networkidle");
+  await webFixture.getCurrentPage().waitForLoadState("networkidle");
   locField = field;
   locType = type;
 
   // const locators: string[] = getLocatorEntries(type);
   const timeout = 30 * 1000;
   const interval = 2000;
-  const result = await validateLocatorLoop(uiFixture.getCurrentPage(), timeout, interval, type);
+  const result = await validateLocatorLoop(webFixture.getCurrentPage(), timeout, interval, type);
   if (result && result.exists && result.visible) {
     // return result.locator.toString();
-    return uiFixture.getCurrentPage().locator(result.locator.toString());
+    return webFixture.getCurrentPage().locator(result.locator.toString());
   } else {
     console.warn(
       `⚠️ Timeout reached! No valid locator found for type "${type}" with field name "${field}".`
     );
     // return "";
-    return uiFixture.getCurrentPage().locator("");
+    return webFixture.getCurrentPage().locator("");
   }
 }
 // export async function loc(

@@ -7,7 +7,7 @@ import { createLogger } from "winston";
 import { options } from "../helper/util/logger";
 import './parameterHook';
 import '../helper/report/init';
-import { vars, loc, uiFixture, logFixture } from '@src/global';
+import { vars, loc, webFixture, logFixture } from '@src/global';
 
 
 const fs = require("fs-extra");
@@ -23,7 +23,7 @@ BeforeAll(async function () {
     // browser = await invokeBrowser();\
     if (globalThis.runType === 'ui') {
         // browser = await invokeBrowser();
-        await uiFixture.launchBrowser();
+        await webFixture.launchBrowser();
       }
 });
 // It will trigger for not auth scenarios
@@ -31,13 +31,13 @@ Before({ tags: "not @auth" }, async function ({ pickle }) {
     const scenarioName = pickle.name + pickle.id;
 
     logFixture.init(scenarioName);
-    uiFixture.setLogger(logFixture.get());
+    webFixture.setLogger(logFixture.get());
 
     if (globalThis.runType !== 'ui') return;
 
-    context = await uiFixture.newContext()
+    context = await webFixture.newContext()
 
-    await uiFixture.getContext().tracing.start({
+    await webFixture.getContext().tracing.start({
         name: scenarioName,
         title: pickle.name,
         sources: true,
@@ -45,7 +45,7 @@ Before({ tags: "not @auth" }, async function ({ pickle }) {
         snapshots: true,
     });
 
-    await uiFixture.newPage(); // uses 'main' as default
+    await webFixture.newPage(); // uses 'main' as default
     console.log("✅ Page set in Before hook in non-auth");
 });
 
@@ -55,7 +55,7 @@ Before({ tags: '@auth' }, async function ({ pickle }) {
     const scenarioName = pickle.name + pickle.id;
 
     logFixture.init(scenarioName);
-    uiFixture.setLogger(logFixture.get());
+    webFixture.setLogger(logFixture.get());
 
     if (globalThis.runType !== 'ui') return;
 
@@ -72,8 +72,8 @@ Before({ tags: '@auth' }, async function ({ pickle }) {
     //     screenshots: true,
     //     snapshots: true,
     // });
-    context = await uiFixture.newContext()
-    await uiFixture.getContext().tracing.start({
+    context = await webFixture.newContext()
+    await webFixture.getContext().tracing.start({
         name: scenarioName,
         title: pickle.name,
         sources: true,
@@ -81,7 +81,7 @@ Before({ tags: '@auth' }, async function ({ pickle }) {
         snapshots: true,
     });
 //   const page = await context.newPage();
-    await uiFixture.newPage(); // uses 'main' as default
+    await webFixture.newPage(); // uses 'main' as default
     console.log("✅ Page set in Before hook in auth");
 });
 
@@ -90,9 +90,9 @@ After(async function ({ pickle, result }) {
     let img: Buffer;
     const path = `./test-results/trace/${pickle.id}.zip`;
     if (result?.status == Status.PASSED) {
-        img = await uiFixture.getCurrentPage().screenshot(
+        img = await webFixture.getCurrentPage().screenshot(
             { path: `./test-results/screenshots/${pickle.name}.png`, type: "png" })
-        videoPath = await uiFixture.getCurrentPage().video().path();
+        videoPath = await webFixture.getCurrentPage().video().path();
     }
     if (globalThis.runType !== 'ui' && globalThis.runType !== 'mobile') return;
 
@@ -108,9 +108,9 @@ After(async function ({ pickle, result }) {
         await this.attach(`Trace file: ${traceFileLink}`, 'text/html');
     }
     if (globalThis.runType !== 'ui') {
-        await uiFixture.getContext().tracing.stop({ path: path });
-        await uiFixture.getCurrentPage().close();
-        await uiFixture.getContext().close();
+        await webFixture.getContext().tracing.stop({ path: path });
+        await webFixture.getCurrentPage().close();
+        await webFixture.getContext().close();
     };
 
 
@@ -119,7 +119,7 @@ After(async function ({ pickle, result }) {
 
 AfterAll(async function () {
     // await browser.close();
-    if (globalThis.runType !== 'ui') { await uiFixture.closeAll(); };
+    if (globalThis.runType !== 'ui') { await webFixture.closeAll(); };
         
 })
 

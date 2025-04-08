@@ -5,7 +5,6 @@ module.exports = {
             snippetInterface: "async-await"
         },
         paths: [
-            // "./test/features/**/*.feature",
              "./_TEMP/execution/**/*.feature"
         ],
         dryRun: false,
@@ -15,11 +14,11 @@ module.exports = {
             "./src/global.ts", // Should be belore the steps and hooks
             "./test/steps/**/*.ts",
             "./src/hooks/hooks.ts",
-            "./test/steps/debug.steps.ts",
              "./src/hooks/stepHook.ts"
         ],
         requireModule: [
-            "ts-node/register"
+            "ts-node/register",
+            "tsconfig-paths/register"
         ],
         format: [
             "progress-bar",
@@ -29,26 +28,26 @@ module.exports = {
         ],
         parallel: 1
     },
-    rerun: {
-        formatOptions: {
-            snippetInterface: "async-await"
-        },
-        dryRun: false,
-        require: [
-            "ts-node/register",
-            "tsconfig-paths/register",  // <-- added for rerun profile as well
-            "./test/steps/**/*.ts",
-            "./src/hooks/hooks.ts"
-        ],
-        requireModule: [
-            "ts-node/register"
-        ],
-        format: [
-            "progress-bar",
-            "html:test-results/cucumber-report.html",
-            "json:test-results/cucumber-report.json",
-            "rerun:@rerun.txt"
-        ],
-        parallel: 2
-    }
+    // rerun: {
+    //     formatOptions: {
+    //         snippetInterface: "async-await"
+    //     },
+    //     dryRun: false,
+    //     require: [
+    //         "ts-node/register",
+    //         "tsconfig-paths/register",  // <-- added for rerun profile as well
+    //         "./test/steps/**/*.ts",
+    //         "./src/hooks/hooks.ts"
+    //     ],
+    //     requireModule: [
+    //         "ts-node/register"
+    //     ],
+    //     format: [
+    //         "progress-bar",
+    //         "html:test-results/cucumber-report.html",
+    //         "json:test-results/cucumber-report.json",
+    //         "rerun:@rerun.txt"
+    //     ],
+    //     parallel: 2
+    // }
 }
