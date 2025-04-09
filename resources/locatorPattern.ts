@@ -30,6 +30,13 @@ export const locPatternEntries = {
       '//input[@id="{{loc.auto.forId}}"]',
       '#last_3',
       'input[id="{{loc.auto.forId}}"]'
+    ],
+    link: [
+      '#username-input',
+      '.password-input',
+      '//input[@id="{{loc.auto.forId}}"]',
+      '#last_3',
+      'input[id="{{loc.auto.forId}}"]'
     ]
   },
   locations: {
@@ -40,7 +47,10 @@ export const locPatternEntries = {
     main: '//div[@section="{{loc.auto.section.value}}"]',
     full_name: '//li[@data-type="control_fullname"]'
   },
-  
+  scroll: {
+    main: '//div[@section="{{loc.auto.section.value}}"]',
+    full_name: '//li[@data-type="control_fullname"]'
+  }
 };
 
 //ul >> //li[@data-type="control_fullname"] >> #last_3

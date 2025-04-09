@@ -1,15 +1,32 @@
 import { Page } from '@playwright/test';
+import { webFixture } from "@src/global";
 
-export const loc = {
+
+export const locTs = {
+
+  test: {
+    // email: (page: Page) => page.locator('//input[@name="email"]'),
+    // email: () => page().locator('//input[@name="email"]'),
+    // lName: (page: Page) => page.locator('#last_3'),
+    email: () => page().getByLabel('E-Mail Address'),
+    submit: () => page().getByRole('button', { name: 'Login' })
+  },
   loginPage: {
     // email: (page: Page) => page.getByLabel('E-Mail Address'),
-    email: (page: Page) => page.locator('#input-email'),
-    password: (page: Page) => page.getByLabel('Password'),
-    submit: (page: Page) => page.getByRole('button', { name: 'Login' })
+    email: () => page().locator('#input-email'),
+    password: () => page().getByLabel('Password'),
+    submit: () => page().getByRole('button', { name: 'Login' })
   }
 };
 
-export type LocatorType = typeof loc;
+export default locTs;
+
+function page(): Page {
+  const pg = webFixture.getCurrentPage();
+  if (!pg) throw new Error("❌ Page is not initialized in locators.ts");
+  return pg;
+}
+
 
 
 /*

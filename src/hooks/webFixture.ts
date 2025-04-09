@@ -48,11 +48,10 @@ export const webFixture = {
     currentPage = pages.get(name);
     currentPageName = name;
   },
-  setLogger(log: Logger) {
-    logger = log;
-  },
-  getLogger(): Logger {
-    return logger;
+  async closeContext() {
+    if (context) {
+      await context.close();
+    }
   },
   async closeAll() {
     await context?.close();

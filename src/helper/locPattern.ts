@@ -330,7 +330,7 @@ function log(message: string) {
  * Main function that assigns globals, updates locator entries,
  * and calls the locator validation loop.
  */
-export async function loc(
+export async function locPattern(
 //   page: Page,
   type: keyof typeof locPatternEntries.fields,
   field: string

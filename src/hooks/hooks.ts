@@ -7,7 +7,8 @@ import { createLogger } from "winston";
 import { options } from "../helper/util/logger";
 import './parameterHook';
 import '../helper/report/init';
-import { vars, loc, webFixture, logFixture } from '@src/global';
+import { webFixture, logFixture } from '@src/global';
+import { World } from '@cucumber/cucumber';
 
 
 const fs = require("fs-extra");
@@ -31,7 +32,7 @@ Before({ tags: "not @auth" }, async function ({ pickle }) {
     const scenarioName = pickle.name + pickle.id;
 
     logFixture.init(scenarioName);
-    webFixture.setLogger(logFixture.get());
+    logFixture.setLogger(logFixture.get());
 
     if (globalThis.runType !== 'ui') return;
 
@@ -55,7 +56,7 @@ Before({ tags: '@auth' }, async function ({ pickle }) {
     const scenarioName = pickle.name + pickle.id;
 
     logFixture.init(scenarioName);
-    webFixture.setLogger(logFixture.get());
+    logFixture.setLogger(logFixture.get());
 
     if (globalThis.runType !== 'ui') return;
 
@@ -116,6 +117,24 @@ After(async function ({ pickle, result }) {
 
 
 });
+// After(async function (this: World) {
+//     const page = webFixture.getCurrentPage();
+  
+//     if (page && !page.isClosed()) {
+//       const video = page.video();
+//       const videoPath = await video?.path();
+//       if (videoPath && fs.existsSync(videoPath)) {
+//         const buffer = fs.readFileSync(videoPath);
+//         this.attach(buffer, "video/webm");
+//       } else {
+//         console.warn(`⚠️ Video file not found at: ${videoPath}`);
+//       }
+//     } else {
+//       console.warn("⚠️ Page was already closed before After hook.");
+//     }
+  
+//     await webFixture.closeContext(); // move this out of step-def timing
+//   });
 
 AfterAll(async function () {
     // await browser.close();

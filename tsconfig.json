@@ -14,6 +14,7 @@
         "paths": {
             "@src/*": ["src/*"],
             "@helper/*": ["src/helper/*"],
+            "@actions": ["src/helper/actions/index.ts"],
             "@resources/*": ["resources/*"]
         }
     },

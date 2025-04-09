@@ -4,11 +4,11 @@ import { expect } from "@playwright/test";
 // import { fixture } from "../../src/hooks/pageFixture";
 
 // const { getVar, setVar } = globalThis.getBundle;
-import { vars, webFixture } from '@src/global';
+import { vars, webFixture , logFixture} from '@src/global';
 const { getVar, setVar } = vars;
 const fixture = webFixture;
 const page = webFixture.getCurrentPage();
-const logger = webFixture.getLogger;
+const logger = logFixture.getLogger;
 
 
 

@@ -10,6 +10,12 @@ export const logFixture = {
   get(): Logger {
     if (!logger) throw new Error("Logger not initialized!");
     return logger;
+  },
+  setLogger(log: Logger) {
+    logger = log;
+  },
+  getLogger(): Logger {
+    return logger;
   }
 };
 
