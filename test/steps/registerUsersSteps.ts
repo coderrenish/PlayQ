@@ -45,8 +45,9 @@ Given(
   async function (username, password) {
     await web.goto("https://ecommerce-playground.lambdatest.io/index.php?route=account/login");
     // await web.type("#last_3", username);
-    // await web.type("loc.ts.test.email", username);
-    await web.type("E-Mail Address", username);
+    // await web.type("loc.json.test3.loginPage.email", username);
+    await web.type("loc.ts.signIn.loginPage.email", username);
+    // await web.type("E-Mail Address", username);
     await web.waitInMilliSeconds(5000);
 
 //     // const browser = await chromium.launch({ headless: false });

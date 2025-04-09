@@ -5,7 +5,7 @@ import { vars, locPattern, webFixture, logFixture } from "@src/global";
 // import { locTs } from "@resources/locators";
 // import locJson from "@resources/locators.json";
 import type { Locator } from '@playwright/test';
-import locTs from "@resources/loc-ts";
+// import locTs from "@resources/loc-ts";
 
 class WebActions {
   async goto(url: string) {
@@ -115,31 +115,58 @@ class WebActions {
       //   return locatorFn(); // direct call assuming it returns Locator
       // }
   
-      if (selector.startsWith("loc.ts.")) {
-        const pageObj = (locTs as any)[pageName];
-        if (!pageObj) throw new Error(`❌ Page "${pageName}" not found in locators.ts`);
+      // if (selector.startsWith("loc.ts.")) {
+      //   const pageObj = (locTs as any)[pageName];
+      //   if (!pageObj) throw new Error(`❌ Page "${pageName}" not found in locators.ts`);
       
-        const locatorFn = pageObj[fieldName];
-        console.log(`🛠 typeof locatorFn =`, typeof locatorFn); // <-- Add this for debugging
-        console.log(`🛠 locatorFn content =`, locatorFn); // <-- Add this for debugging
+      //   const locatorFn = pageObj[fieldName];
+      //   console.log(`🛠 typeof locatorFn =`, typeof locatorFn); // <-- Add this for debugging
+      //   console.log(`🛠 locatorFn content =`, locatorFn); // <-- Add this for debugging
 
       
-        if (!locatorFn) throw new Error(`❌ Field "${fieldName}" not found in locators.ts[${pageName}]`);
+      //   if (!locatorFn) throw new Error(`❌ Field "${fieldName}" not found in locators.ts[${pageName}]`);
+      //   if (typeof locatorFn !== "function") {
+      //     throw new Error(`❌ Locator at locators.ts[${pageName}][${fieldName}] is not a function`);
+      //   }
+      
+      //   console.log(`🧩 Resolved locator from locTs[${pageName}][${fieldName}]`);
+      //   return locatorFn(); // ✅ Safe to call
+      // }
+      if (selector.startsWith("loc.ts.")) {
+        const [, , fileName, pageName, fieldName] = selector.split(".");
+      
+        const tsLocatorModule = await import(`@resources/loc-ts/${fileName}.ts`);
+        const pageObj = tsLocatorModule?.[fileName]?.[pageName];
+        if (!pageObj) throw new Error(`❌ Page "${pageName}" not found in ${fileName}.ts`);
+        
+        const locatorFn = pageObj[fieldName];
+        if (!locatorFn) throw new Error(`❌ Field "${fieldName}" not found in ${fileName}.ts[${pageName}]`);
         if (typeof locatorFn !== "function") {
-          throw new Error(`❌ Locator at locators.ts[${pageName}][${fieldName}] is not a function`);
+          throw new Error(`❌ Locator at ${fileName}.ts[${pageName}][${fieldName}] is not a function`);
         }
       
-        console.log(`🧩 Resolved locator from locTs[${pageName}][${fieldName}]`);
-        return locatorFn(); // ✅ Safe to call
+        console.log(`🧩 Resolved locator from loc.ts.${fileName}.${pageName}.${fieldName}`);
+        return locatorFn();
       }
 
+      // if (selector.startsWith("loc.json.")) {
+      //   const jsonLocatorMap = await import("@resources/loc-json.json");
+      //   const pageObj = (jsonLocatorMap as any)[pageName];
+      //   if (!pageObj) throw new Error(`❌ Page "${pageName}" not found in locators.json`);
+      //   const locatorString = pageObj[fieldName];
+      //   if (!locatorString) throw new Error(`❌ Field "${fieldName}" not found in locators.json[${pageName}]`);
+      //   console.log(`🧩 Resolved locator string from loc.json -> ${locatorString}`);
+      //   return page.locator(locatorString);
+      // }
+
       if (selector.startsWith("loc.json.")) {
-        const jsonLocatorMap = await import("@resources/loc-json.json");
-        const pageObj = (jsonLocatorMap as any)[pageName];
-        if (!pageObj) throw new Error(`❌ Page "${pageName}" not found in locators.json`);
+        const [, , fileName, pageName, fieldName] = selector.split(".");
+        const jsonLocatorMap = await import(`@resources/loc-json/${fileName}.json`);
+        const pageObj = jsonLocatorMap?.[pageName];
+        if (!pageObj) throw new Error(`❌ Page "${pageName}" not found in ${fileName}.json`);
         const locatorString = pageObj[fieldName];
-        if (!locatorString) throw new Error(`❌ Field "${fieldName}" not found in locators.json[${pageName}]`);
-        console.log(`🧩 Resolved locator string from loc.json -> ${locatorString}`);
+        if (!locatorString) throw new Error(`❌ Field "${fieldName}" not found in ${fileName}.json[${pageName}]`);
+        console.log(`🧩 Resolved locator string from loc.json.${fileName}.${pageName}.${fieldName} -> ${locatorString}`);
         return page.locator(locatorString);
       }
   

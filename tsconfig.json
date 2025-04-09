@@ -18,5 +18,5 @@
             "@resources/*": ["resources/*"]
         }
     },
-    "include": ["src", "test"]
+    "include": ["src", "test", "resources"]
 }

@@ -1,6 +1,6 @@
 {
     "loginPage": {
-      "email": "//input[@name='emails']",
+      "email": "//input[@name='email']",
       "password": "#input-password"
     }
   }
