@@ -1,43 +1,26 @@
 import fs from 'fs';
 import path from 'path';
 
-const staticVars: Record<string, string> = {};
+import { variable as importedVars } from '@resources/variable';
+import { config as importedConfig } from '@resources/config';
+
+const patternDirs = [
+  path.resolve(__dirname, '../../../resources/locators/pattern'),
+  path.resolve(__dirname, '../../../src/helper/addons/pattern')
+];
+
+const staticVars: Record<string, string> = {
+  ...flattenConfig(importedVars, "var"),
+  ...flattenConfig(importedConfig),
+};
 const runtimeVars: Record<string, string> = {};
 const loggedMissingKeys = new Set<string>();
-let hasLoadedVars = false;
 
-const varDataPath = path.resolve('resources/variables.json');
+// validateVariableKeys(importedVars); 
+loadPatternEntries(); // load Pattern entries
 
-// function loadStaticVars() {
-//   if (Object.keys(staticVars).length > 0) return; // already loaded
-//   try {
-//     const rawData = fs.readFileSync(varDataPath, 'utf-8');
-//     const parsed = JSON.parse(rawData);
-//     Object.assign(staticVars, parsed);
-//     console.log(`✅ Loaded static variables from ${varDataPath}`);
-//   } catch (err) {
-//     console.error(`❌ Failed to load static variables:`, err);
-//   }
-// }
 
-function loadStaticVars(silent = false) {
-    if (hasLoadedVars) return;
-  
-    try {
-      const rawData = fs.readFileSync(varDataPath, 'utf-8');
-      const parsed = JSON.parse(rawData);
-      Object.assign(staticVars, parsed);
-      if (!silent) {
-        console.log(`✅ Loaded static variables from ${varDataPath} (PID: ${process.pid})`);
-    }
-    } catch (err) {
-      console.error(`❌ Failed to load static variables:`, err);
-    }
-    hasLoadedVars = true;
-  }
-
-  
-function getVar(key: string): string {
+function getValue(key: string): string {
   if (key in runtimeVars) return runtimeVars[key];
   if (key in staticVars) return staticVars[key];
 
@@ -49,9 +32,15 @@ function getVar(key: string): string {
   return key;
 }
 
-
-function setVar(key: string, value: string): void {
+function setValue(key: string, value: string): void {
   runtimeVars[key] = value;
+}
+
+function replaceVariables(input: string): string {
+  return input.replace(/\$\{([^}]+)\}/g, (_, varName) => {
+    const value = this.getValue(varName);
+    return value;
+  });
 }
 
 function debugVars() {
@@ -59,7 +48,68 @@ function debugVars() {
   console.log('🧠 Runtime Vars:', runtimeVars);
 }
 
-// Load once during module initialization
-loadStaticVars();
+// function validateVariableKeys(vars: Record<string, string>) {
+//   const invalidKeys = Object.keys(vars).filter((key) => {
+//     return !/^var\.[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)*$/.test(key);
+//   });
 
-export { getVar, setVar, debugVars, loadStaticVars };
+//   if (invalidKeys.length > 0) {
+//     throw new Error(
+//       `❌ variables.ts: Invalid variable keys detected:\n${invalidKeys.join("\n")}\n\nEach key must:
+// - Start with "var."
+// - Only contain alphanumeric characters, "_" or "-"
+// - No spaces or special characters`
+//     );
+//   }
+// }
+
+function flattenConfig(obj: any, prefix = 'config'): Record<string, string> {
+  const entries: Record<string, string> = {};
+  for (const key in obj) {
+    const fullKey = `${prefix}.${key}`;
+    if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+      Object.assign(entries, flattenConfig(obj[key], fullKey));
+    } else if (Array.isArray(obj[key])) {
+      entries[fullKey] = obj[key].join(','); // Store arrays as comma-separated strings
+    } else {
+      entries[fullKey] = String(obj[key]);
+    }
+  }
+  return entries;
+}
+
+function loadPatternEntries() {
+  
+  const files: string[] = [];
+  
+  for (const dir of patternDirs) {
+    if (fs.existsSync(dir)) {
+      const dirFiles = fs.readdirSync(dir)
+        .filter(file => file.endsWith('.ts'))
+        .map(file => path.join(dir, file));
+      files.push(...dirFiles);
+    }
+  }
+
+  for (const file of files) {
+    const fileName = path.basename(file, '.ts');
+  
+    if (!/^[a-zA-Z0-9_]+$/.test(fileName)) {
+      throw new Error(`❌ Invalid pattern file name "${fileName}". Only alphanumeric characters and underscores are allowed.`);
+    }
+  
+    const patternModule = require(file); // dynamic import
+  
+    const exported = patternModule[fileName] || patternModule.default?.[fileName];
+    if (!exported) {
+      throw new Error(`❌ Exported const '${fileName}' not found in: ${file}`);
+    }
+  
+    const flattened = flattenConfig(exported, `pattern.${fileName}`);
+    Object.assign(staticVars, flattened);
+  }
+  
+}
+
+
+export { getValue, setValue, replaceVariables, debugVars };
