@@ -75,3 +75,5 @@ npm run test --TAGS="@test or @add"
 ## Pattern
 1. Sample `{{form::test1}} {address::test2} Street Address[1]`
     `{{<location name>::<location value>}} {<section name>::<section value>} Street Address[<Instance>]`
+
+2. Faker is added via global

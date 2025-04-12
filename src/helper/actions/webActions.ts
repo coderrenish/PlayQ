@@ -16,9 +16,14 @@ class WebActions {
     const page = webFixture.getCurrentPage();
     if (!page) throw new Error("Page not initialized");
     // await page.click(selector);
+    // const target =
+    //   typeof selector === "string" ? page.locator(selector) : selector;
     const target =
-      typeof selector === "string" ? page.locator(selector) : selector;
-    await target.click();
+    typeof selector === "string"
+      ? await this.resolveLocator("button", selector)
+      : selector;
+    // await target.click();
+    await page.locator("#shadow-host >> #my-btn").click();
   }
 
   async type(selector: string | Locator, value: string) {
@@ -100,7 +105,7 @@ class WebActions {
   }
 
   private async resolveLocator(
-    type: "label" | "select" | "input" | "link",
+    type: string,
     selector: string
   ): Promise<Locator> {
     console.log(`🔍 Resolving locator: ${selector}`);

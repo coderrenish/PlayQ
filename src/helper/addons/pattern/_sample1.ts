@@ -31,6 +31,9 @@ export const _sample1 = {
       '//input[@id="{{loc.auto.forId}}"]',
       '#last_3',
       'input[id="{{loc.auto.forId}}"]'
+    ],
+    button: [
+      "#shadow-host >> #my-btn"
     ]
   },
   locations: {
@@ -42,7 +45,6 @@ export const _sample1 = {
     full_name: "//li[@data-type='control_fullname']",
   },
   scroll: [
-    '//div[@section="{{loc.auto.section.value}}"]',
-    '//li[@data-type="control_fullname"]'
+    "//h1"
   ]
 };

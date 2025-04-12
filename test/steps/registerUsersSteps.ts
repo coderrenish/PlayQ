@@ -9,7 +9,7 @@ import * as data from "../../src/helper/util/test-data/registerUser.json";
 // const { getVar, setVar } = globalThis.getBundle;
 // import { getVar, setVar } from '@helper/bundle/vars';
 // import { loc } from '@src/helper/loc';
-import { vars, webFixture } from "@src/global";
+import { vars, webFixture,utils,faker } from "@src/global";
 import { web } from "@actions";
 
 const { getValue, setValue } = vars;
@@ -44,17 +44,31 @@ Given(
   "I login using {param} and {string}",
   async function (username, password) {
     // await web.goto("https://ecommerce-playground.lambdatest.io/index.php?route=account/login");
+
     await web.goto("https://www.jotform.com/form-templates/preview/223393028066960/classic");
+    await web.type("{{form::test1}} {address::test2} Street Address[1]", username);
+    
+    // await web.goto("https://practice.expandtesting.com/infinite-scroll"); // Scroll test
+    // await web.goto("https://practice.expandtesting.com/shadowdom"); // Shadow Dom Test
+    // await web.click("This button is inside a Shadow DOM.");
     // await web.type("#last_3", username);
     // await web.type("loc.json.test3.loginPage.email", username);
     // await web.fill("loc.ts.signIn.loginPage.email", username);
-    await web.type("{{form::test1}} {address::test2} Street Address[1]", username);
+    
     console.log("Config >>:", vars.getValue("config.timeout"));
     console.log("Pattern >>:", vars.getValue("pattern.athena.fields.label"));
     console.log("Pattern >>:", vars.getValue("pattern.test.fields.label"));
     console.log("Pattern - ADDON>>:", vars.getValue("pattern._sample1.fields.label"));
     console.log("Pattern - ADDON>>:", vars.getValue("pattern._sample2.fields.label"));
 
+    console.log("UTILS >>:", utils.toCamelCase("11To thw -Camel # Case_ 123"));
+    let nric = utils.generateNRIC("S",1968,false)
+    console.log("UTILS - NRIC >>:", nric);
+    console.log("UTILS - NRIC to year>>:", utils.getYearFromNRIC(nric));
+
+    console.log("FAKER - Generate Name>>:", faker.person.firstName("female"));
+    console.log("FAKER - Generate Name>>:", faker.person.lastName());
+    console.log("FAKER - Generate Passport>>:", faker.passport.number("SG"));
     await web.waitInMilliSeconds(3000);
 
 //     // const browser = await chromium.launch({ headless: false });
