@@ -70,3 +70,8 @@ npm run test --TAGS="@test or @add"
 ## Tutorials
 1. Learn Playwright - [Playwright - TS](https://youtube.com/playlist?list=PL699Xf-_ilW7EyC6lMuU4jelKemmS6KgD)
 2. BDD in detail - [TS binding](https://youtube.com/playlist?list=PL699Xf-_ilW6KgK-S1l9ynOnBGiZl2Bsk)
+
+
+## Pattern
+1. Sample `{{form::test1}} {address::test2} Street Address[1]`
+    `{{<location name>::<location value>}} {<section name>::<section value>} Street Address[<Instance>]`

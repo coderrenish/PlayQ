@@ -1,12 +1,14 @@
 import { Page, Locator } from "@playwright/test";
 // import { locPatternEntries } from "../../resources/locatorPattern";
-import { locPatternEntries } from "@resources/locatorPattern";
+// import { locPatternEntries } from "@resources/locators/locatorPattern";
 // import { vars, fixture } from '@src/global';
 import { vars, webFixture } from '@src/global';
+// import { getValue, setValue } from "../bundle/vars";
 
 
 const loggingStatus = true; // Set to true to enable logging
-let locType: keyof typeof locPatternEntries.fields = "label";
+// let locType: keyof typeof locPatternEntries.fields = "label";
+let locType = "";
 let locField = "";
 let locFieldName = "";
 let locFieldInstance = "";
@@ -19,6 +21,12 @@ let locSectionValue = "";
 let locLocation = "";
 let locLocationName = "";
 let locLocationValue = "";
+
+let patternVarNameField = "";
+let patternVarNameLocation = "";
+let patternVarNameSection = "";
+let patternVarNameSroll = "";
+
 
 interface LocatorResult {
   locator: string;
@@ -137,7 +145,6 @@ async function validateLocatorLoop(
   page: Page,
   timeout: number,
   interval: number,
-  type: string // Added type to decide on label processing
 ): Promise<LocatorResult | null> {
   const startTime = Date.now();
   const labelLocators: string[] = await getLocatorEntries("label");
@@ -209,7 +216,7 @@ async function validateLocatorLoop(
 /**
  * Returns updated locator entries after replacing placeholders with global values.
  */
-async function getLocatorEntries(type: keyof typeof locPatternEntries.fields): Promise<string[]> {
+async function getLocatorEntries(argType): Promise<string[]> {
   // Regex breakdown:
   // ^                         - start of string
   // (?:{{([^:}]+)::([^}]+)}})? - Optionally match location block: {{LocationName::LocationValue}}
@@ -224,18 +231,11 @@ async function getLocatorEntries(type: keyof typeof locPatternEntries.fields): P
     .replace(/\/\{/g, "$2$")
     .replace(/\/\[/g, "$3$");
 
-  // const pattern = /^(?:{{([^:}]+)(?:::(.+?))?}})?(?:{([^:}]+)(?:::(.+?))?})?(.+?)(?:\[(\d+)\])?$/;
   const pattern =
     /^(?:{{([^:}]+)(?:::(.+?))?}}\s*)?(?:{([^:}]+)(?:::(.+?))?}\s*)?(.+?)(?:\[(\d+)\])?$/;
   const match = preprocessed.match(pattern);
 
   if (match) {
-    // Group 1: Location Name (optional)
-    // Group 2: Location Value (optional)
-    // Group 3: Section Name (optional)
-    // Group 4: Section Value (optional)
-    // Group 5: Field Name (mandatory)
-    // Group 6: Field Instance (optional)
     locLocationName = match[1] ? match[1].trim() : "";
     locLocationValue = match[2] ? match[2].trim() : "";
     locSectionName = match[3] ? match[3].trim() : "";
@@ -257,18 +257,16 @@ async function getLocatorEntries(type: keyof typeof locPatternEntries.fields): P
       .replace(/\$3\$/g, "[");
     locFieldInstance = "1";
   }
-  locLocation = locLocationName && locLocationName in locPatternEntries.locations
-    ? locPatternEntries.locations[locLocationName as keyof typeof locPatternEntries.locations].replace(
-        /{{loc.auto.location.value}}/g,
-        locLocationValue
-      )
-    : "";
-  locSection = locSectionName
-    ? (locPatternEntries.sections[locSectionName as keyof typeof locPatternEntries.sections]).replace(
-        /{{loc.auto.section.value}}/g,
-        locSectionValue
-      )
-    : "";
+  vars.setValue("loc.auto.fieldName", locFieldName);
+  vars.setValue("loc.auto.fieldInstance", locFieldInstance);
+  vars.setValue("loc.auto.forId", locFieldForId);
+  vars.setValue("loc.auto.location.value", locLocationValue);
+  vars.setValue("loc.auto.section.value", locSectionValue);
+  vars.setValue("loc.auto.location.name", locLocationName); // Not required
+  vars.setValue("loc.auto.section.name", locSectionName); // Not required
+
+  locLocation = (locLocationName && (vars.getValue(patternVarNameLocation+locLocationName) != patternVarNameLocation+locLocationName)) ? vars.replaceVariables(vars.getValue(patternVarNameLocation+locLocationName)) : "";
+  locSection = (locSectionName && (vars.getValue(patternVarNameSection+locSectionName) != patternVarNameSection+locSectionName)) ? vars.replaceVariables(vars.getValue(patternVarNameSection+locSectionName)) : "";
 
   console.log(">> locLocation:", locLocation);
   console.log(">> locLocationName:", locLocationName);
@@ -279,26 +277,12 @@ async function getLocatorEntries(type: keyof typeof locPatternEntries.fields): P
   console.log(">> locFieldName:", locFieldName);
   console.log(">> locFieldInstance:", locFieldInstance);
 
-  if (!(type in locPatternEntries.fields)) {
-    console.warn(
-      `❌ Invalid type "${type}". Available types: ${Object.keys(
-        locPatternEntries
-      ).join(", ")}`
-    );
+  if (vars.getValue(patternVarNameField+argType) == patternVarNameField+argType) {
+    console.warn(`❌ No valid locators found for type "${argType}".`)
     return [];
   }
-
-  // if (!(type in locPatternEntries)) {
-  //   throw new Error(`❌ Invalid type "${type}". Available types: ${Object.keys(locPatternEntries).join(", ")}`);
-  //   return [];
-  // }
-  const rawLocators: string[] = locPatternEntries.fields[type];
-  return rawLocators.map((locator) =>
-    locator
-      .replace(/{{loc.auto.fieldName}}/g, locFieldName)
-      .replace(/{{loc.auto.fieldInstance}}/g, locFieldInstance)
-      .replace(/{{loc.auto.forId}}/g, locFieldForId)
-  );
+  return vars.replaceVariables((vars.getValue(patternVarNameField+argType))).split(",");
+  
 }
 
 /**
@@ -326,30 +310,47 @@ function log(message: string) {
   if (!loggingStatus) console.log(`Pattern Logging: ${message}`);
 }
 
+
+
+
 /**
  * Main function that assigns globals, updates locator entries,
  * and calls the locator validation loop.
  */
 export async function locPattern(
 //   page: Page,
-  type: keyof typeof locPatternEntries.fields,
-  field: string
+  // type: keyof typeof locPatternEntries.fields,
+  argType: string,
+  argField: string,
+  argConfig?: string,
 ): Promise<Locator> {
   // Wait for the page to load fully
   await webFixture.getCurrentPage().waitForLoadState("networkidle");
-  locField = field;
-  locType = type;
+  locField = argField.trim();
+  locType = argType.trim();
+  let patternFile
+  if (argConfig) {
+    patternFile = argConfig.trim() 
+  } else {
+    patternFile = (vars.getValue("config.patternConfig") == "config.patternConfig") ? "" : vars.getValue("config.patternConfig");
+    if (patternFile == "") throw new Error(`❌ No pattern file name found. Please check your config.`);
+  }
+ 
+  patternVarNameField = "pattern." + patternFile.trim() + ".fields.";
+  patternVarNameLocation = "pattern." + patternFile.trim() + ".locations.";
+  patternVarNameSection = "pattern." + patternFile.trim() + ".sections.";
+  patternVarNameSroll = "pattern." + patternFile.trim() + ".scroll";
 
   // const locators: string[] = getLocatorEntries(type);
   const timeout = 30 * 1000;
   const interval = 2000;
-  const result = await validateLocatorLoop(webFixture.getCurrentPage(), timeout, interval, type);
+  const result = await validateLocatorLoop(webFixture.getCurrentPage(), timeout, interval);
   if (result && result.exists && result.visible) {
     // return result.locator.toString();
     return webFixture.getCurrentPage().locator(result.locator.toString());
   } else {
     console.warn(
-      `⚠️ Timeout reached! No valid locator found for type "${type}" with field name "${field}".`
+      `⚠️ Timeout reached! No valid locator found for type "${argType}" with field name "${argField}".`
     );
     // return "";
     return webFixture.getCurrentPage().locator("");

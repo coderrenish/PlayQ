@@ -1,14 +1,14 @@
 import type * as varsType from './helper/bundle/vars';
-import type { loc as locType } from './helper/loc';
-import type { webFixture as webFixtureType } from './hooks/webFixture'; // ✅ Use the actual type
-import type { logFixture as logFixtureType } from './hooks/logFixture';
+import type { locPattern as locPatternType } from './helper/locPattern';
+import type { webFixture as webFixtureType } from './helper/fixtures/webFixture'; // ✅ Use the actual type
+import type { logFixture as logFixtureType } from './helper/fixtures/logFixture';
 
 export {};
 
 declare global {
   var runType: 'ui' | 'api' | 'mobile';
   var vars: typeof varsType;
-  var loc: typeof locType;
+  var locPattern: typeof locPatternType;
   var webFixture: typeof webFixtureType; // ✅ Use the actual type
   var logFixture: typeof logFixtureType;
 }

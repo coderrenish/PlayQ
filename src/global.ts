@@ -1,7 +1,7 @@
 import * as vars from './helper/bundle/vars';
-import { locPattern } from './helper/locPattern';
-import { webFixture } from './hooks/webFixture'; 
-import { logFixture } from './hooks/logFixture';
+import { locPattern } from './helper/sml/locPattern';
+import { webFixture } from './helper/fixtures/webFixture'; 
+import { logFixture } from './helper/fixtures/logFixture';
 
 globalThis.runType = process.env.TEST_TYPE || 'ui';
 

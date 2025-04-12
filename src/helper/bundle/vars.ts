@@ -9,11 +9,11 @@ const patternDirs = [
   path.resolve(__dirname, '../../../src/helper/addons/pattern')
 ];
 
-const staticVars: Record<string, string> = {
+const storedVars: Record<string, string> = {
   ...flattenConfig(importedVars, "var"),
   ...flattenConfig(importedConfig),
 };
-const runtimeVars: Record<string, string> = {};
+// const runtimeVars: Record<string, string> = {};
 const loggedMissingKeys = new Set<string>();
 
 // validateVariableKeys(importedVars); 
@@ -21,8 +21,8 @@ loadPatternEntries(); // load Pattern entries
 
 
 function getValue(key: string): string {
-  if (key in runtimeVars) return runtimeVars[key];
-  if (key in staticVars) return staticVars[key];
+  // if (key in runtimeVars) return runtimeVars[key];
+  if (key in storedVars) return storedVars[key];
 
   if (!loggedMissingKeys.has(key)) {
     console.warn(`⚠️ Variable not found for key: "${key}"`);
@@ -33,7 +33,7 @@ function getValue(key: string): string {
 }
 
 function setValue(key: string, value: string): void {
-  runtimeVars[key] = value;
+  storedVars[key] = value;
 }
 
 function replaceVariables(input: string): string {
@@ -44,8 +44,8 @@ function replaceVariables(input: string): string {
 }
 
 function debugVars() {
-  console.log('📦 Static Vars:', staticVars);
-  console.log('🧠 Runtime Vars:', runtimeVars);
+  console.log('📦 Static Vars:', storedVars);
+  // console.log('🧠 Runtime Vars:', runtimeVars);
 }
 
 // function validateVariableKeys(vars: Record<string, string>) {
@@ -79,13 +79,17 @@ function flattenConfig(obj: any, prefix = 'config'): Record<string, string> {
 }
 
 function loadPatternEntries() {
-  
   const files: string[] = [];
-  
   for (const dir of patternDirs) {
     if (fs.existsSync(dir)) {
       const dirFiles = fs.readdirSync(dir)
-        .filter(file => file.endsWith('.ts'))
+        .filter(file => {
+          const isTS = file.endsWith('.ts');
+          const isAddonDir = dir.includes('src/helper/addons/pattern');
+          if (!isTS) return false;
+          if (isAddonDir) return file.startsWith('_'); // only _ files in addon dir
+          return !file.startsWith('_'); // exclude _ files in resources dir
+        })
         .map(file => path.join(dir, file));
       files.push(...dirFiles);
     }
@@ -93,20 +97,16 @@ function loadPatternEntries() {
 
   for (const file of files) {
     const fileName = path.basename(file, '.ts');
-  
     if (!/^[a-zA-Z0-9_]+$/.test(fileName)) {
       throw new Error(`❌ Invalid pattern file name "${fileName}". Only alphanumeric characters and underscores are allowed.`);
     }
-  
     const patternModule = require(file); // dynamic import
-  
     const exported = patternModule[fileName] || patternModule.default?.[fileName];
     if (!exported) {
       throw new Error(`❌ Exported const '${fileName}' not found in: ${file}`);
     }
-  
     const flattened = flattenConfig(exported, `pattern.${fileName}`);
-    Object.assign(staticVars, flattened);
+    Object.assign(storedVars, flattened);
   }
   
 }

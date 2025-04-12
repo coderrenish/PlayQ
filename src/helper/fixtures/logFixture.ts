@@ -1,5 +1,5 @@
 import { Logger, createLogger } from 'winston';
-import { options } from '../helper/util/logger';  // 👈 Reuse logger config from here
+import { options } from '../util/logger';  // 👈 Reuse logger config from here
 
 let logger: Logger;
 

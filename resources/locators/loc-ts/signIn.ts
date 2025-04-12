@@ -2,16 +2,16 @@ import { Page } from '@playwright/test';
 import { webFixture } from "@src/global";
 
 
-export const locTs = {
+export const signIn = {
 
-  test: {
+  loginPage: {
     // email: (page: Page) => page.locator('//input[@name="email"]'),
     // email: () => page().locator('//input[@name="email"]'),
     // lName: (page: Page) => page.locator('#last_3'),
     email: () => page().getByLabel('E-Mail Address'),
     submit: () => page().getByRole('button', { name: 'Login' })
   },
-  loginPage: {
+  test: {
     // email: (page: Page) => page.getByLabel('E-Mail Address'),
     email: () => page().locator('#input-email'),
     password: () => page().getByLabel('Password'),
@@ -19,7 +19,7 @@ export const locTs = {
   }
 };
 
-export default locTs;
+
 
 function page(): Page {
   const pg = webFixture.getCurrentPage();

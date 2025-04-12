@@ -5,7 +5,6 @@ import { expect } from "@playwright/test";
 
 // const { getVar, setVar } = globalThis.getBundle;
 import { vars, webFixture , logFixture} from '@src/global';
-const { getVar, setVar } = vars;
 const fixture = webFixture;
 const page = webFixture.getCurrentPage();
 const logger = logFixture.getLogger;
@@ -57,8 +56,8 @@ Given('I login using step 2 {param} and {string}', async function (username, pas
 
     console.log("Username: " + username);
     console.log("Password: " + password);
-    console.log("From Mem: " + getVar("var.password"));
-    setVar("var.password","new password 2")
-    console.log("From Mem: " + getVar("var.password"));
+    console.log("From Mem: " + vars.getValue("var.password"));
+    vars.setValue("var.password","new password 2")
+    console.log("From Mem: " + vars.getValue("var.password"));
   });
   

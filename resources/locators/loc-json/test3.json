@@ -1,6 +1,6 @@
 {
     "loginPage": {
-      "email": "//input[@name='email']",
+      "email": "//input[@name='${var.field.login}']",
       "password": "#input-password"
     }
   }

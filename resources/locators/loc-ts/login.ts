@@ -2,25 +2,22 @@ import { Page } from '@playwright/test';
 import { webFixture } from "@src/global";
 
 
-export const signIn = {
+export const login = {
 
-  loginPage: {
+  test: {
     // email: (page: Page) => page.locator('//input[@name="email"]'),
     // email: () => page().locator('//input[@name="email"]'),
     // lName: (page: Page) => page.locator('#last_3'),
-    email: () => page().getByLabel('E-Mail Address'),
+    // email: () => page().getByLabel('E-Mail Address'),
     submit: () => page().getByRole('button', { name: 'Login' })
   },
-  test: {
+  loginPages: {
     // email: (page: Page) => page.getByLabel('E-Mail Address'),
     email: () => page().locator('#input-email'),
     password: () => page().getByLabel('Password'),
     submit: () => page().getByRole('button', { name: 'Login' })
   }
 };
-
-export default signIn;
-
 
 
 function page(): Page {

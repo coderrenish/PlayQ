@@ -12,7 +12,7 @@ import * as data from "../../src/helper/util/test-data/registerUser.json";
 import { vars, webFixture } from "@src/global";
 import { web } from "@actions";
 
-const { getVar, setVar } = vars;
+const { getValue, setValue } = vars;
 
 let registerPage: RegisterPage;
 let assert: Assert;
@@ -43,12 +43,19 @@ Then("I confirm user registration is success", async function () {
 Given(
   "I login using {param} and {string}",
   async function (username, password) {
-    await web.goto("https://ecommerce-playground.lambdatest.io/index.php?route=account/login");
+    // await web.goto("https://ecommerce-playground.lambdatest.io/index.php?route=account/login");
+    await web.goto("https://www.jotform.com/form-templates/preview/223393028066960/classic");
     // await web.type("#last_3", username);
     // await web.type("loc.json.test3.loginPage.email", username);
-    await web.type("loc.ts.signIn.loginPage.email", username);
-    // await web.type("E-Mail Address", username);
-    await web.waitInMilliSeconds(5000);
+    // await web.fill("loc.ts.signIn.loginPage.email", username);
+    await web.type("{{form::test1}} {address::test2} Street Address[1]", username);
+    console.log("Config >>:", vars.getValue("config.timeout"));
+    console.log("Pattern >>:", vars.getValue("pattern.athena.fields.label"));
+    console.log("Pattern >>:", vars.getValue("pattern.test.fields.label"));
+    console.log("Pattern - ADDON>>:", vars.getValue("pattern._sample1.fields.label"));
+    console.log("Pattern - ADDON>>:", vars.getValue("pattern._sample2.fields.label"));
+
+    await web.waitInMilliSeconds(3000);
 
 //     // const browser = await chromium.launch({ headless: false });
 //     // const context: BrowserContext = await browser.newContext();
