@@ -43,10 +43,11 @@ Then("I confirm user registration is success", async function () {
 Given(
   "I login using {param} and {string}",
   async function (username, password) {
+    
     // await web.goto("https://ecommerce-playground.lambdatest.io/index.php?route=account/login");
 
     await web.goto("https://www.jotform.com/form-templates/preview/223393028066960/classic");
-    await web.type("{{form::test1}} {address::test2} Street Address[1]", username);
+    await web.type("Street Address", password);
     
     // await web.goto("https://practice.expandtesting.com/infinite-scroll"); // Scroll test
     // await web.goto("https://practice.expandtesting.com/shadowdom"); // Shadow Dom Test
@@ -55,7 +56,9 @@ Given(
     // await web.type("loc.json.test3.loginPage.email", username);
     // await web.fill("loc.ts.signIn.loginPage.email", username);
     
-    console.log("Config >>:", vars.getValue("config.timeout"));
+    console.log("Config (via vars) >>:", vars.getValue("config.timeout"));
+    console.log("Config >>:", vars.getConfigValue("timeout"));
+
     console.log("Pattern >>:", vars.getValue("pattern.athena.fields.label"));
     console.log("Pattern >>:", vars.getValue("pattern.test.fields.label"));
     console.log("Pattern - ADDON>>:", vars.getValue("pattern._sample1.fields.label"));
@@ -64,7 +67,7 @@ Given(
     console.log("UTILS >>:", utils.toCamelCase("11To thw -Camel # Case_ 123"));
     let nric = utils.generateNRIC("S",1968,false)
     console.log("UTILS - NRIC >>:", nric);
-    console.log("UTILS - NRIC to year>>:", utils.getYearFromNRIC(nric));
+    console.log("UTILS - NRIC to year>>:", utils.getYearFromNRIC("S6073485B"));
 
     console.log("FAKER - Generate Name>>:", faker.person.firstName("female"));
     console.log("FAKER - Generate Name>>:", faker.person.lastName());

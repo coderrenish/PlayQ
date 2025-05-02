@@ -21,6 +21,7 @@ loadPatternEntries(); // load Pattern entries
 
 
 function getValue(key: string): string {
+  key = key.trim();
   // if (key in runtimeVars) return runtimeVars[key];
   if (key in storedVars) return storedVars[key];
 
@@ -29,6 +30,18 @@ function getValue(key: string): string {
     loggedMissingKeys.add(key);
   }
 
+  return key;
+}
+
+function getConfigValue(key: string): string {
+  key = 'config.'+key.trim();
+  // if (key in runtimeVars) return runtimeVars[key];
+  if (key in storedVars) return storedVars[key];
+
+  if (!loggedMissingKeys.has(key)) {
+    console.warn(`⚠️ Config Variable not found for key: "${key}"`);
+    loggedMissingKeys.add(key);
+  }
   return key;
 }
 
@@ -112,4 +125,4 @@ function loadPatternEntries() {
 }
 
 
-export { getValue, setValue, replaceVariables, debugVars };
+export { getValue, getConfigValue, setValue, replaceVariables, debugVars };

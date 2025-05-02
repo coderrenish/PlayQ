@@ -24,7 +24,8 @@ module.exports = {
             "progress-bar",
             "html:test-results/cucumber-report.html",
             "json:test-results/cucumber-report.json",
-            "rerun:@rerun.txt"
+            "rerun:@rerun.txt",
+            "dist/src/helper/report/CustomStepReporter.js"
         ],
         parallel: 1
     },

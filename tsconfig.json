@@ -16,7 +16,9 @@
             "@helper/*": ["src/helper/*"],
             "@actions": ["src/helper/actions/index.ts"],
             "@resources/*": ["resources/*"]
-        }
+        },
+        "module": "CommonJS"
+      
     },
     "include": ["src", "test", "resources"]
 }

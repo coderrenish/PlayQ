@@ -6,7 +6,7 @@
   "scripts": {
     "test:command": "cross-env ENV=prod FORCE_COLOR=0 cucumber-js || true",
     "test": "NODE_OPTIONS='-r tsconfig-paths/register' npm run test:command && npm run posttest",
-    "test:tag:command": "cross-env cucumber-js --profile default --tags \"$npm_config_tags\" || true",
+    "test:tag:command": "cross-env cucumber-js --profile default --tags \"$TAGS\" || true",
     "test:tag": "npm run pretest && NODE_OPTIONS='-r tsconfig-paths/register' npm run test:tag:command && npm run posttest",
     "debug": "cross-env ENV=prod PWDEBUG=1 DEBUG=pw:api cucumber-js",
     "pretest": "npx ts-node src/hooks/preprocessFeatures.ts",
