@@ -1,9 +1,9 @@
 const report = require("multiple-cucumber-html-reporter");
 import * as fs from 'fs';
 
-const jsonPath = 'test-results/cucumber-report.json';
+const jsonPath = 'test-results/cucumber-report-custom.json';
 if (!fs.existsSync(jsonPath)) {
-  console.warn("⚠️ cucumber-report.json not found.");
+  console.warn("⚠️ cucumber-report-custom.json not found.");
   const files = fs.readdirSync('test-results');
   console.warn("📁 test-results folder contains:", files);
 } else {

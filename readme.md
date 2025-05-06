@@ -77,3 +77,13 @@ npm run test --TAGS="@test or @add"
     `{{<location name>::<location value>}} {<section name>::<section value>} Street Address[<Instance>]`
 
 2. Faker is added via global
+
+
+## Vars
+  ${config.XXXXX} 
+  ${vars.XXXXX} 
+  ${env.XXXXX} 
+
+
+## Executions
+  > TAGS="@test_2" ENV="PROD" npm run test:tag

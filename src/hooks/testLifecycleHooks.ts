@@ -1,4 +1,4 @@
-import { getEnv } from '@helper/env/env';
+import { getEnv } from '@src/helper/bundle/env';
 import { webFixture,vars } from '@src/global';
 import fs from 'fs-extra';
 

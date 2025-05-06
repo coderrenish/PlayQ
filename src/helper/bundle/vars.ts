@@ -23,6 +23,16 @@ loadPatternEntries(); // load Pattern entries
 function getValue(key: string): string {
   key = key.trim();
   // if (key in runtimeVars) return runtimeVars[key];
+  if (key.startsWith("env.")) {
+    const envKey = key.slice(4);
+    const envValue = process.env[envKey];
+    if (!envValue) {
+      console.warn(`⚠️ Environment variable not found for key: "${envKey}"`);
+      return key;
+    }
+    return envValue;
+  }
+  
   if (key in storedVars) return storedVars[key];
 
   if (!loggedMissingKeys.has(key)) {

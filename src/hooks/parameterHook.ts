@@ -7,9 +7,13 @@ import { vars } from '@src/global';
 defineParameterType({
   name: 'param',
   regexp: /".*?"/, // Matches any quoted string
-  transformer(input: string) {
+  transformer(this: any, input: string) {
     const raw = input.replace(/^"|"$/g, '').trim();
-    return vars.replaceVariables(raw);
+    const resolved = vars.replaceVariables(raw);
+    if (typeof this?.attach === 'function') {
+      this.attach(`Replaced: |${input}|-with-|${resolved}|`, 'text/plain');
+    }
+    return resolved;
   }
 });
 

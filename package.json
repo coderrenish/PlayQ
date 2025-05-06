@@ -10,7 +10,7 @@
     "test:tag": "npm run pretest && NODE_OPTIONS='-r tsconfig-paths/register' npm run test:tag:command && npm run posttest",
     "debug": "cross-env ENV=prod PWDEBUG=1 DEBUG=pw:api cucumber-js",
     "pretest": "npx ts-node src/hooks/preprocessFeatures.ts",
-    "posttest": "npx ts-node src/helper/report/report.ts",
+    "posttest": "npx ts-node src/helper/report/customiseReport.ts && npx ts-node src/helper/report/report.ts",
     "test:failed": "cucumber-js -p rerun @rerun.txt",
     "postinstall": "npx playwright install"
   },

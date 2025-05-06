@@ -25,7 +25,7 @@ module.exports = {
             "html:test-results/cucumber-report.html",
             "json:test-results/cucumber-report.json",
             "rerun:@rerun.txt",
-            "dist/src/helper/report/CustomStepReporter.js"
+            // "dist/src/helper/report/CustomStepReporter.js"
         ],
         parallel: 1
     },

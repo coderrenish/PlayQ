@@ -43,9 +43,15 @@ Then("I confirm user registration is success", async function () {
 Given(
   "I login using {param} and {string}",
   async function (username, password) {
-    
-    // await web.goto("https://ecommerce-playground.lambdatest.io/index.php?route=account/login");
+    const tags = process.env.TAGS;
+    console.log('🔥 Running with tags:', tags);
+    console.log('🌐 Base URL:', process.env.BASEURL);
+console.log('🧭 Browser:', vars.getValue("env.BROWSER"));
+console.log('👀 Headless Mode:', process.env.HEAD === 'true');
 
+
+    // await web.goto("https://ecommerce-playground.lambdatest.io/index.php?route=account/login");
+    vars.setValue("var.username", faker.person.firstName());
     await web.goto("https://www.jotform.com/form-templates/preview/223393028066960/classic");
     await web.type("Street Address", password);
     

@@ -16,7 +16,7 @@ export const login = {
     email: () => page().locator('#input-email'),
     password: () => page().getByLabel('Password'),
     submit: () => page().getByRole('button', { name: 'Login' })
-  }
+    }
 };
 
 
