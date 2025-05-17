@@ -1,8 +1,10 @@
 // This is framework config file
 
+import { version } from "winston";
+
 export const config = {
   timeout: "30000", // Excepted: numeric (milliseconds). Default: 30000 milliseconds (30 seconds)
-  patternConfig: "athenaaa",
+  patternConfig: "lambdatest",
   baseUrl: "https://your-app.com", // Excepted: Any url. Default: Blank
   browser: {
     session: "default", // Type: each. Default: "default"
@@ -25,7 +27,9 @@ export const config = {
     retryTimeout: 30000, // Expected: numeric only. Default: 30000 milliseconds (30 seconds)
     order: "sequential", // Expected: "sequential" or "random". Default: "sequential"
   },
-
+  d365CRM: {
+    version: "v9.2", // Expected: "v9.2" or "v9.2.nl". Default: "v9.2"
+  },
 
   featureFlags: {
     enableBetaUI: true,

@@ -1,0 +1,7 @@
+{
+    "registerPage": {
+      "inpt_first_name": "//input[@id='input-firstname']",
+      "inpt_last_name": "input-lastname",
+      "inpt_telephone":"input[type='tel']"
+    }
+  }

@@ -1,3 +1,3 @@
 // src/actions/index.ts
 
-export { default as web } from './webActions';
+export { default as web } from './web';

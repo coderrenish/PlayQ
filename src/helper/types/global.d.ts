@@ -1,5 +1,5 @@
 import type * as varsType from '../bundle/vars';
-import type { locPattern as locPatternType } from '../sml/locPattern';
+import type { locPattern as locPatternType } from '../loc/webLocPattern';
 import type { webFixture as webFixtureType } from '../fixtures/webFixture'; 
 import type { logFixture as logFixtureType } from '../fixtures/logFixture';
 import * as utilsType from '../util/utils';

@@ -6,7 +6,7 @@ import { config as importedConfig } from '@resources/config';
 
 const patternDirs = [
   path.resolve(__dirname, '../../../resources/locators/pattern'),
-  path.resolve(__dirname, '../../../src/helper/addons/pattern')
+  path.resolve(__dirname, '../addons/pattern')
 ];
 
 const storedVars: Record<string, string> = {
@@ -32,7 +32,7 @@ function getValue(key: string): string {
     }
     return envValue;
   }
-  
+
   if (key in storedVars) return storedVars[key];
 
   if (!loggedMissingKeys.has(key)) {
@@ -93,7 +93,9 @@ function flattenConfig(obj: any, prefix = 'config'): Record<string, string> {
     if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
       Object.assign(entries, flattenConfig(obj[key], fullKey));
     } else if (Array.isArray(obj[key])) {
-      entries[fullKey] = obj[key].join(','); // Store arrays as comma-separated strings
+      entries[fullKey] = obj[key].join(';'); // Store arrays as comma-separated strings
+      // Store arrays as JSON strings to preserve structure
+      // entries[fullKey] = JSON.stringify(obj[key]);
     } else {
       entries[fullKey] = String(obj[key]);
     }
@@ -107,7 +109,7 @@ function loadPatternEntries() {
     if (fs.existsSync(dir)) {
       const dirFiles = fs.readdirSync(dir)
         .filter(file => {
-          const isTS = file.endsWith('.ts');
+          const isTS = file.endsWith('.pattern.ts');
           const isAddonDir = dir.includes('src/helper/addons/pattern');
           if (!isTS) return false;
           if (isAddonDir) return file.startsWith('_'); // only _ files in addon dir
@@ -119,7 +121,7 @@ function loadPatternEntries() {
   }
 
   for (const file of files) {
-    const fileName = path.basename(file, '.ts');
+    const fileName = path.basename(file, '.pattern.ts');
     if (!/^[a-zA-Z0-9_]+$/.test(fileName)) {
       throw new Error(`❌ Invalid pattern file name "${fileName}". Only alphanumeric characters and underscores are allowed.`);
     }

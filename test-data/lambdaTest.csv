@@ -1,0 +1,4 @@
+_ENV,_STATUS,fName,lName,age
+DEV,true,${faker.person.firstName()},${faker.person.lastName()},2
+DEV,false,${faker.person.firstName()},${faker.person.lastName()},4
+SIT,true,testuser3,testpassword3,3

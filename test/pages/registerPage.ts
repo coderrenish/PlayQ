@@ -1,7 +1,7 @@
 import { expect, Page } from "@playwright/test";
 import PlaywrightWrapper from "../../src/helper/wrapper/PlaywrightWrappers";
 // import { fixture } from "../../src/hooks/pageFixture";
-import { vars, locPattern, webFixture } from '@src/global';
+import { vars, webLocPattern, webFixture } from '@src/global';
 
 // const page = webFixture.getCurrentPage();
 

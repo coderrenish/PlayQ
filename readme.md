@@ -1,5 +1,25 @@
 # PlayQ Playwright Framework
 # Playwright (TS binding) + Cucumber (BDD)
+	  1. Modular Architecture (Clean Separation of Concerns)
+	    •	Clear separation between actions (webActions, d365CRM), hooks, step definitions, and utilities.
+	    •	This modular approach makes it easy to extend and maintain.
+	  2. Comprehensive Locator Strategy
+	    •	Supports multiple locator sources, including XPath, CSS, resource-based locators (loc.ts and loc.json), and pattern matching.
+	    •	Dynamic locator resolution using resolveLocator() is impressive.
+	  3. Flexible Configuration
+      •	Environment Handling (env.ts, .env support)
+      •	Pattern Matching for DOM element selection
+      •	Centralized variable management through vars.ts
+	  4. Advanced Test Features
+      •	Step Parameterization: Custom {param} handling with parameterHook.ts.
+      •	Embedded Logging: Custom step logging and attachments.
+      •	Dynamic Data Handling: Integration with Faker and variable resolution.
+	  5. Custom Report Generation
+      •	Integrated with multiple-cucumber-html-reporter.
+      •	Custom JSON preprocessing to enhance report readability.
+	  6. Resilient Test Execution
+      •	Parallel execution, retries, and reruns.
+      •	Strong error handling for flaky UI tests.
 
 Cucumber is a popular behavior-driven development (BDD) tool that allows developers and stakeholders to collaborate on defining and testing application requirements in a human-readable format. 
 TypeScript is a powerful superset of JavaScript that adds optional static typing, making it easier to catch errors before runtime. By combining these two tools, we can create more reliable and maintainable tests.
@@ -87,3 +107,22 @@ npm run test --TAGS="@test or @add"
 
 ## Executions
   > TAGS="@test_2" ENV="PROD" npm run test:tag
+
+## VS Code Plugin
+  "cucumberautocomplete.steps": [
+        "tests/step-definitions/**/*.ts",
+        "test/steps/**/*.ts",
+        "test/steps/*.ts",
+        "src/helper/addons/steps/*.ts",
+        "src/helper/actions/steps/**/*.ts",
+      ],
+      "cucumberautocomplete.syncfeatures": 
+    "test/features/**/*.feature, test/features/*.feature",
+
+## Step Group
+  All Step Groups should be within _step_group directory inside test/featues
+  Extension of he files should be 
+    <some name>.steps.feature (or)
+    <some name>.step.feature (or)
+    <some name>.sg.feature (or)
+    <some name>.steps.sg.feature

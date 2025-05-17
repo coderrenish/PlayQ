@@ -2,6 +2,8 @@ import { BeforeAll, Before, After, AfterAll } from '@cucumber/cucumber';
 import { setupEnvAndBrowser, shutdownBrowser } from './testLifecycleHooks';
 import { handleScenarioSetup } from './scenarioHooks';
 import { handleScenarioTeardown } from './supportHooks';
+import { web } from "@actions";
+
 import './parameterHook';
 
 BeforeAll(async function () {
@@ -10,10 +12,12 @@ BeforeAll(async function () {
 
 Before({ tags: 'not @auth' }, async function (ctx) {
   await handleScenarioSetup(ctx, false);
+  web.setAttachFn(this.attach); 
 });
 
 Before({ tags: '@auth' }, async function (ctx) {
   await handleScenarioSetup(ctx, true);
+  web.setAttachFn(this.attach); 
 });
 
 After(async function (ctx) {

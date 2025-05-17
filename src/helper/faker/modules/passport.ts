@@ -1,7 +1,8 @@
 // src/helper/faker/modules/passport.ts
 import { faker } from "@faker-js/faker";
 
-export function generatePassportNumber(countryCode: string = "IN"): string {
+export function generatePassportNumber(options?: {countryCode?: string}): string {
+  const {countryCode = 'AU'} = options;
   switch (countryCode.toUpperCase()) {
     case "IN":
       return `${faker.string.alpha({

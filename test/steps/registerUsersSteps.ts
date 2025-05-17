@@ -11,6 +11,9 @@ import * as data from "../../src/helper/util/test-data/registerUser.json";
 // import { loc } from '@src/helper/loc';
 import { vars, webFixture,utils,faker } from "@src/global";
 import { web } from "@actions";
+import { d365crm } from "@addons";
+// import { _sample1 } from "@src/helper/addons/pattern/_sample1";
+
 
 const { getValue, setValue } = vars;
 
@@ -53,8 +56,9 @@ console.log('👀 Headless Mode:', process.env.HEAD === 'true');
     // await web.goto("https://ecommerce-playground.lambdatest.io/index.php?route=account/login");
     vars.setValue("var.username", faker.person.firstName());
     await web.goto("https://www.jotform.com/form-templates/preview/223393028066960/classic");
-    await web.type("Street Address", password);
-    
+    // await web.type("Street Address", password,"_d365crm_v9_2");
+    await d365crm.d365LoginTestStep("TESTING - USERNAME", "TESTING - PASSWORD");
+    await d365crm.d365Input("TESTING - INPUT");
     // await web.goto("https://practice.expandtesting.com/infinite-scroll"); // Scroll test
     // await web.goto("https://practice.expandtesting.com/shadowdom"); // Shadow Dom Test
     // await web.click("This button is inside a Shadow DOM.");
@@ -77,7 +81,7 @@ console.log('👀 Headless Mode:', process.env.HEAD === 'true');
 
     console.log("FAKER - Generate Name>>:", faker.person.firstName("female"));
     console.log("FAKER - Generate Name>>:", faker.person.lastName());
-    console.log("FAKER - Generate Passport>>:", faker.passport.number("SG"));
+    console.log("FAKER - Generate Passport>>:", faker.custom.passport({countryCode:"AU"}));
     await web.waitInMilliSeconds(3000);
 
 //     // const browser = await chromium.launch({ headless: false });

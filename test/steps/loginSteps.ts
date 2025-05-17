@@ -24,6 +24,7 @@ Given('User click on the login link', async function () {
 
 Given('User enter the username as {string}', async function (username) {
     await page.locator("input[formcontrolname='username']").type(username);
+    
 });
 
 Given('User enter the password as {string}', async function (password) {

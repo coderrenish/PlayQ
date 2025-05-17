@@ -15,6 +15,7 @@
             "@src/*": ["src/*"],
             "@helper/*": ["src/helper/*"],
             "@actions": ["src/helper/actions/index.ts"],
+            "@addons": ["src/helper/addons/index.ts"],
             "@resources/*": ["resources/*"]
         },
         "module": "CommonJS"

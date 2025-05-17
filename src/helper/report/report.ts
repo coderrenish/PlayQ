@@ -42,10 +42,10 @@ report.generate({
             name: "chrome",
             version: "112",
         },
-        device: "Koushik - PC",
+        device: "Renish - Mac",
         platform: {
-            name: "Windows",
-            version: "10",
+            name: "Mac OS",
+            version: "15.3.2 (24D81)",
         },
     },
     customData: {

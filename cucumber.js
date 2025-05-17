@@ -13,6 +13,9 @@ module.exports = {
             "tsconfig-paths/register",  // <-- added to enable path aliasing
             "./src/global.ts", // Should be belore the steps and hooks
             "./test/steps/**/*.ts",
+            "./src/helper/actions/web.ts",
+            "./src/helper/addons/**/*.ts",
+            "./src/helper/actions/*.ts",
             "./src/hooks/hooks.ts",
              "./src/hooks/stepHook.ts"
         ],

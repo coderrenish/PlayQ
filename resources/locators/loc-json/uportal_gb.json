@@ -1,0 +1,6 @@
+{
+    "membershipBenefitsPage": {
+      "start_application": "//button[normalize-space(text())='Start Application']",
+      "retrive_draft": "//button[normalize-space(text())='Retrieve Draft']"
+    }
+  }
