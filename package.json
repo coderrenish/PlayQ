@@ -34,5 +34,6 @@
     "tsconfig-paths": "^4.2.0",
     "winston": "^3.8.2",
     "xlsx": "^0.18.5"
+  
   }
 }

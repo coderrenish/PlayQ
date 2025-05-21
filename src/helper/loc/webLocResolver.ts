@@ -13,7 +13,12 @@ export async function webLocResolver(
 
     const isPlaywrightPrefixed = selector.startsWith("xpath=") || selector.startsWith("xpath =") || selector.startsWith("css=") || selector.startsWith("css =");
     if (isPlaywrightPrefixed) {
-      const rawSelector = selector.replace(/^xpath=|^css=|^xpath =|^css =/, "");
+      // const rawSelector = selector.replace(/^xpath=|^css=|^xpath =|^xpath=\\|^xpath =\\|^css =/, "");
+      // Normalize escaped forward slashes first, then remove prefix
+      const rawSelector = selector
+        .replace(/^xpath=\\|^xpath =\\/, "xpath=") // normalize `xpath=\` to `xpath=`
+        .replace(/^xpath=|^xpath =|^css=|^css =/, "") // remove the actual prefix
+        .replace(/\\\//g, "/"); // replace escaped slashes with normal ones
       console.log("📍 Detected Playwright-prefixed selector. Returning raw locator.");
       return page.locator(rawSelector);
     }

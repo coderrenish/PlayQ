@@ -9,8 +9,6 @@ export const lambdatest = {
     inpt_password: () => page().getByRole('textbox', { name: 'Password*' }),
     inpt_password_confirm: () => page().getByRole('textbox', { name: 'Password Confirm*' }),
 
-
-
   }
 };
 

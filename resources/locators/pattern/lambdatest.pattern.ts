@@ -18,7 +18,8 @@ export const lambdatest = {
       ],
     select_options: [ 
       ],
-    input: ["//input[@id='${loc.auto.forId}']"
+    input: ["//input[@id='${loc.auto.forId}']", "#${loc.auto.forId}", "//input[@placeholder='${loc.auto.fieldName}']",
+      "(//input[@placeholder='${loc.auto.fieldName}'])[${loc.auto.fieldInstance}]",
       ],
     link: [
       "//a//span[normalize-space(text())='${loc.auto.fieldName}']"
@@ -43,6 +44,7 @@ export const lambdatest = {
   },
   sections: {
     radio_group: "//fieldset[legend[normalize-space(text())='${loc.auto.section.value}']]",
+    accordion: "//button[contains(@class,'accordion')][text()='${loc.auto.section.value}']",
   },
   scroll: [
     "h1:first-child"
