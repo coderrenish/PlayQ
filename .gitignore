@@ -8,6 +8,5 @@ dist/
 /_TEMP/
 cucumber-report.html
 assets
-features
 @rerun.txt
 index.html
