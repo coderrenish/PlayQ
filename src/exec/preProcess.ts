@@ -270,7 +270,7 @@ function run() {
 // }
 
 function expandStepGroups(lines: string[], inputPath: string): string[] {
-  const stepGroupDir = path.resolve('test/features/_step_group');
+  const stepGroupDir = path.resolve('test/_step_group');
   const groupPattern = /^@(.*?)\.steps?\.?sg?\/$/;
   const endGroupPattern = /^@\/(.*?)\.steps?\.?sg?$/;
   const groupCache: Record<string, string[]> = {};
