@@ -3,6 +3,41 @@ import path from 'path';
 import csv from 'csv-parser';
 import xlsx from 'xlsx';
 import { generateStepGroups } from './sgGenerator';
+// // Loads and caches all step group definitions from stepGroup_steps.ts
+// function loadStepGroupCache(): Record<string, { description: string; steps: string[] }> {
+//   const stepDefPath = path.resolve('test/steps/_step_group/stepGroup_steps.ts');
+//   const groupRegex = /Given\('Step Group: -(.+?)- -(.+?)-',[\s\S]*?\/\*StepGroup:\1([\s\S]*?)\*\//g;
+
+//   const groupCache: Record<string, { description: string; steps: string[] }> = {};
+//   if (!fs.existsSync(stepDefPath)) {
+//     console.error(`❌ stepGroup_steps.ts not found at ${stepDefPath}`);
+//     return groupCache;
+//   }
+
+//   const content = fs.readFileSync(stepDefPath, 'utf-8');
+//   let match;
+//   while ((match = groupRegex.exec(content)) !== null) {
+//     const [_, name, desc, block] = match;
+//     const steps = block.split('\n')
+//       .map(l => l.trim())
+//       .filter(l => l && !l.startsWith('StepGroup:'));
+//     groupCache[name] = { description: desc, steps };
+//     console.log(`✅ Loaded Step Group: ${name} (${steps.length} steps)`);
+//   }
+
+//   return groupCache;
+// }
+function loadStepGroupCache(): Record<string, { description: string; steps: string[] }> {
+  const cachePath = path.resolve('_Temp/.cache/stepGroup_cache.json');
+  if (!fs.existsSync(cachePath)) {
+    console.error(`❌ Step group JSON cache not found. Please run sgGenerator.ts first.`);
+    return {};
+  }
+
+  return JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
+}
+const args = process.argv.slice(2);
+const isForced = args.includes('--force');
 
 const sourceDir = path.resolve('test/features');
 const outputDir = path.resolve('_Temp/execution');
@@ -58,7 +93,7 @@ function substituteFilter(filter: string, row: Record<string, any>): string {
   });
 }
 
-function preprocessFeatureFile(inputPath: string, outputPath: string) {
+function preprocessFeatureFile(inputPath: string, outputPath: string, stepGroupCache: Record<string, { description: string; steps: string[] }>) {
   const featureText = fs.readFileSync(inputPath, 'utf-8');
   const lines = featureText.split('\n');
 
@@ -104,17 +139,15 @@ function preprocessFeatureFile(inputPath: string, outputPath: string) {
   //     return;
   //   }
   if (!dataFile || !filter || exampleLineIndex === -1) {
-      console.log("📣 No Examples detected. Proceeding with step group expansion only...");
+    console.log("📣 No Examples detected. Proceeding with step group expansion only...");
+    const expandedLines = expandStepGroups(lines, inputPath, stepGroupCache);
+    const outputContent = expandedLines.join('\n');
+    fs.writeFileSync(outputPath, outputContent, 'utf-8');
+    console.log(`📄 Preprocessed (no Examples): ${outputPath}`);
+    return;
+  }
 
-      const expandedLines = expandStepGroups(lines, inputPath);
-      const outputContent = expandedLines.join('\n');
-
-      fs.writeFileSync(outputPath, outputContent, 'utf-8');
-      console.log(`📄 Preprocessed (no Examples): ${outputPath}`);
-      return;
-    }
-
-    console.log("✔ Should generate examples (this line will NOT show if the block above returns)");
+  console.log("✔ Should generate examples (this line will NOT show if the block above returns)");
 
   const ext = path.extname(dataFile).toLowerCase();
   const fullPath = path.join(dataDir, path.basename(dataFile));
@@ -126,14 +159,14 @@ function preprocessFeatureFile(inputPath: string, outputPath: string) {
       fs.writeFileSync(outputPath, featureText, 'utf-8');
       return;
     }
-  
+
     const headers = Object.keys(rows[0]); // Include all headers including _ENV, _STATUS etc.
     const examples = ['Examples:', `  | ${headers.join(' | ')} |`]
       .concat(rows.map(r => {
         const rowData = headers.map(h => r[h] || '');
         return `  | ${rowData.join(' | ')} |`;
       }));
-  
+
     const outputLines = [
       ...lines.slice(0, exampleLineIndex),
       ...examples,
@@ -141,13 +174,12 @@ function preprocessFeatureFile(inputPath: string, outputPath: string) {
     ];
 
     // Expand Step Groups before processing Examples
-    const expandedLines = expandStepGroups(outputLines, inputPath);
+    const expandedLines = expandStepGroups(outputLines, inputPath, stepGroupCache);
 
     // Rebuild Examples only after step groups are expanded
     const finalLines = expandedLines.join('\n');
 
     fs.writeFileSync(outputPath, finalLines, 'utf-8');
-    // fs.writeFileSync(outputPath, finalLines.join('\n'), 'utf-8');
     console.log(`✅ Processed: ${outputPath}`);
   };
 
@@ -186,12 +218,15 @@ function preprocessFeatureFile(inputPath: string, outputPath: string) {
 
 function run() {
   console.log("🔄 Generating step group definitions from sgGenerator...");
-  generateStepGroups(); // Regenerate stepGroup_steps.ts before preprocessing
+  generateStepGroups({ force: isForced }); // Regenerate stepGroup_steps.ts before preprocessing
 
   if (fs.existsSync(outputDir)) {
     fs.rmSync(outputDir, { recursive: true, force: true });
   }
   fs.mkdirSync(outputDir, { recursive: true });
+
+  // Load step group cache once
+  const stepGroupCache = loadStepGroupCache();
 
   const features = findFeatureFiles(sourceDir);
   if (!features.length) {
@@ -207,37 +242,21 @@ function run() {
     }
 
     const outPath = ensureOutputPath(featurePath);
-    preprocessFeatureFile(featurePath, outPath);
+    preprocessFeatureFile(featurePath, outPath, stepGroupCache);
   });
 }
 
-function expandStepGroups(lines: string[], inputPath: string): string[] {
-  const stepDefPath = path.resolve('test/steps/_step_group/stepGroup_steps.ts');
-  if (!fs.existsSync(stepDefPath)) {
-    console.error(`❌ stepGroup_steps.ts not found at ${stepDefPath}`);
-    return lines;
-  }
-
-  const content = fs.readFileSync(stepDefPath, 'utf-8');
-  // Regex: Given('Step Group: -<name>- -<desc>-', ...) { /*StepGroup:<name> ... */ }
-  const groupRegex = /Given\('Step Group: -(.+?)- -(.+?)-',[\s\S]*?\/\*StepGroup:\1([\s\S]*?)\*\//g;
-
-  const groupCache: Record<string, { description: string; steps: string[] }> = {};
-  let match;
-  while ((match = groupRegex.exec(content)) !== null) {
-    const [_, name, desc, block] = match;
-    const steps = block.split('\n')
-      .map(l => l.trim())
-      .filter(l => l && !l.startsWith('StepGroup:'));
-    groupCache[name] = { description: desc, steps };
-    console.log(`✅ Loaded Step Group: ${name} (${steps.length} steps)`);
-  }
-
+function expandStepGroups(
+  lines: string[],
+  inputPath: string,
+  stepGroupCache: Record<string, { description: string; steps: string[] }>
+): string[] {
   return lines.flatMap(line => {
-    const match = line.trim().match(/^\* Step Group: -([a-zA-Z0-9_.]+)-/);
+    // const match = line.trim().match(/^\* Step Group: -([a-zA-Z0-9_.]+)-/);
+    const match = line.trim().match(/^(?:\*|Given|When|Then|And|But) Step Group: -([a-zA-Z0-9_.]+)-/);
     if (match) {
       const groupName = match[1];
-      const group = groupCache[groupName];
+      const group = stepGroupCache[groupName];
       if (!group) {
         console.error(`❌ Step Group not found: ${groupName} (in ${inputPath})`);
         return [line];
