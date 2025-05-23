@@ -1,8 +1,8 @@
-
 import fs from 'fs';
 import path from 'path';
 import csv from 'csv-parser';
 import xlsx from 'xlsx';
+import { generateStepGroups } from './sgGenerator';
 
 const sourceDir = path.resolve('test/features');
 const outputDir = path.resolve('_Temp/execution');
@@ -88,10 +88,33 @@ function preprocessFeatureFile(inputPath: string, outputPath: string) {
     }
   });
 
+  // if (!dataFile || !filter || exampleLineIndex === -1) {
+  //   fs.writeFileSync(outputPath, featureText, 'utf-8');
+  //   return;
+  // }
+  // console.log("✔ Should generate examples");
+  //   if (!dataFile || !filter || exampleLineIndex === -1) {
+  //     const expandedLines = expandStepGroups(lines, inputPath);
+
+  //     const outputContent = expandedLines.join('\n');
+
+  //     // Write even if nothing expanded
+  //     fs.writeFileSync(outputPath, outputContent, 'utf-8');
+  //     console.log(`📄 Preprocessed (no Examples): ${outputPath}`);
+  //     return;
+  //   }
   if (!dataFile || !filter || exampleLineIndex === -1) {
-    fs.writeFileSync(outputPath, featureText, 'utf-8');
-    return;
-  }
+      console.log("📣 No Examples detected. Proceeding with step group expansion only...");
+
+      const expandedLines = expandStepGroups(lines, inputPath);
+      const outputContent = expandedLines.join('\n');
+
+      fs.writeFileSync(outputPath, outputContent, 'utf-8');
+      console.log(`📄 Preprocessed (no Examples): ${outputPath}`);
+      return;
+    }
+
+    console.log("✔ Should generate examples (this line will NOT show if the block above returns)");
 
   const ext = path.extname(dataFile).toLowerCase();
   const fullPath = path.join(dataDir, path.basename(dataFile));
@@ -162,6 +185,9 @@ function preprocessFeatureFile(inputPath: string, outputPath: string) {
 }
 
 function run() {
+  console.log("🔄 Generating step group definitions from sgGenerator...");
+  generateStepGroups(); // Regenerate stepGroup_steps.ts before preprocessing
+
   if (fs.existsSync(outputDir)) {
     fs.rmSync(outputDir, { recursive: true, force: true });
   }
@@ -173,24 +199,60 @@ function run() {
     return;
   }
 
-  // features.forEach(featurePath => {
-  //   const outPath = ensureOutputPath(featurePath);
-  //   preprocessFeatureFile(featurePath, outPath);
-  // });
   features.forEach(featurePath => {
-    // Skip the _step_group directory
-    if (featurePath.includes('_step_group')) {
+    // Skip the step group directory
+    if (featurePath.includes('_step_group') || featurePath.includes('step_group')) {
       console.log(`🛑 Skipping step group directory: ${featurePath}`);
       return;
     }
-  
+
     const outPath = ensureOutputPath(featurePath);
     preprocessFeatureFile(featurePath, outPath);
   });
-
 }
 
+function expandStepGroups(lines: string[], inputPath: string): string[] {
+  const stepDefPath = path.resolve('test/steps/_step_group/stepGroup_steps.ts');
+  if (!fs.existsSync(stepDefPath)) {
+    console.error(`❌ stepGroup_steps.ts not found at ${stepDefPath}`);
+    return lines;
+  }
 
+  const content = fs.readFileSync(stepDefPath, 'utf-8');
+  // Regex: Given('Step Group: -<name>- -<desc>-', ...) { /*StepGroup:<name> ... */ }
+  const groupRegex = /Given\('Step Group: -(.+?)- -(.+?)-',[\s\S]*?\/\*StepGroup:\1([\s\S]*?)\*\//g;
+
+  const groupCache: Record<string, { description: string; steps: string[] }> = {};
+  let match;
+  while ((match = groupRegex.exec(content)) !== null) {
+    const [_, name, desc, block] = match;
+    const steps = block.split('\n')
+      .map(l => l.trim())
+      .filter(l => l && !l.startsWith('StepGroup:'));
+    groupCache[name] = { description: desc, steps };
+    console.log(`✅ Loaded Step Group: ${name} (${steps.length} steps)`);
+  }
+
+  return lines.flatMap(line => {
+    const match = line.trim().match(/^\* Step Group: -([a-zA-Z0-9_.]+)-/);
+    if (match) {
+      const groupName = match[1];
+      const group = groupCache[groupName];
+      if (!group) {
+        console.error(`❌ Step Group not found: ${groupName} (in ${inputPath})`);
+        return [line];
+      }
+      return [
+        `* - Step Group - START: "${groupName}" Desc: "${group.description}"`,
+        ...group.steps.map(step => `  ${step}`),
+        `* - Step Group - END: "${groupName}"`
+      ];
+    }
+    return [line];
+  });
+}
+
+run();
 
 // function expandStepGroups(lines: string[], inputPath: string): string[] {
 //   const stepGroupDir = path.resolve('test/features/_step_group');
@@ -269,90 +331,106 @@ function run() {
 //   });
 // }
 
-function expandStepGroups(lines: string[], inputPath: string): string[] {
-  const stepGroupDir = path.resolve('test/_step_group');
-  const groupPattern = /^@(.*?)\.steps?\.?sg?\/$/;
-  const endGroupPattern = /^@\/(.*?)\.steps?\.?sg?$/;
-  const groupCache: Record<string, string[]> = {};
+// function expandStepGroups(lines: string[], inputPath: string): string[] {
+//   const stepGroupDir = path.resolve('test/_step_group');
+//   // Updated patterns for XML-like tags
+//   const groupPattern = /^@<([\w\-\.]+)\/>$/;
+//   const endGroupPattern = /^@<\/([\w\-\.]+)>$/;
+//   const groupCache: Record<string, string[]> = {};
 
-  // Validate the _step_group directory
-  if (!fs.existsSync(stepGroupDir)) {
-    console.warn(`⚠️  Step group directory not found: ${stepGroupDir}`);
-    return lines;
-  }
+//   // Validate the _step_group directory
+//   if (!fs.existsSync(stepGroupDir)) {
+//     console.warn(`⚠️  Step group directory not found: ${stepGroupDir}`);
+//     return lines;
+//   }
 
-  // Read all valid step group files
-  const stepGroupFiles = fs.readdirSync(stepGroupDir)
-    .filter(file => /\.(steps\.feature|step\.feature|sg\.feature|steps\.sg\.feature)$/i.test(file));
+//   // Read all valid step group files
+//   const stepGroupFiles = fs.readdirSync(stepGroupDir)
+//     .filter(file => /\.(steps\.feature|step\.feature|sg\.feature|steps\.sg\.feature)$/i.test(file));
 
-  if (stepGroupFiles.length === 0) {
-    console.warn(`⚠️  No step group files found in: ${stepGroupDir}`);
-    return lines;
-  }
+//   if (stepGroupFiles.length === 0) {
+//     console.warn(`⚠️  No step group files found in: ${stepGroupDir}`);
+//     return lines;
+//   }
 
-  // Load all step groups into cache
-  stepGroupFiles.forEach(file => {
-    const groupName = file.replace(/\.(steps\.feature|step\.feature|sg\.feature|steps\.sg\.feature)$/i, '');
-    const fullPath = path.join(stepGroupDir, file);
-    const fileContent = fs.readFileSync(fullPath, 'utf-8').trim().split('\n');
-    let currentGroup = "";
-    const groupLines = [];
+//   // Load all step groups into cache
+//   stepGroupFiles.forEach(file => {
+//     const groupName = file.replace(/\.(steps\.feature|step\.feature|sg\.feature|steps\.sg\.feature)$/i, '');
+//     const fullPath = path.join(stepGroupDir, file);
+//     const fileContent = fs.readFileSync(fullPath, 'utf-8').trim().split('\n');
+//     let currentGroup = "";
+//     let groupDesc = "";
+//     const groupLines: string[] = [];
 
-    fileContent.forEach(line => {
-      const trimmedLine = line.trim();
-      const startMatch = trimmedLine.match(groupPattern);
-      const endMatch = trimmedLine.match(endGroupPattern);
+//     fileContent.forEach(line => {
+//       const trimmedLine = line.trim();
+//       const startMatch = trimmedLine.match(groupPattern);
+//       const endMatch = trimmedLine.match(endGroupPattern);
 
-      if (startMatch) {
-        currentGroup = startMatch[1];
-        groupCache[currentGroup] = [];
-        return;
-      }
+//       if (startMatch) {
+//         currentGroup = startMatch[1];
+//         groupDesc = "";
+//         groupCache[currentGroup] = [];
+//         return;
+//       }
 
-      if (endMatch && endMatch[1] === currentGroup) {
-        groupCache[currentGroup] = [...groupLines]; // Clone array
-        groupLines.length = 0;
-        currentGroup = "";
-        return;
-      }
+//       if (trimmedLine.startsWith('@desc:') && currentGroup) {
+//         groupDesc = trimmedLine.replace('@desc:', '').trim();
+//         return;
+//       }
 
-      if (currentGroup) {
-        groupLines.push(`  ${trimmedLine}`);
-      }
-    });
+//       if (endMatch && endMatch[1] === currentGroup) {
+//         groupCache[currentGroup] = [...groupLines]; // Clone array
+//         // Print the extracted step group in structured format
+//         console.log(JSON.stringify({
+//           groupName: currentGroup,
+//           description: groupDesc,
+//           steps: groupLines
+//         }, null, 2));
+//         groupLines.length = 0;
+//         currentGroup = "";
+//         groupDesc = "";
+//         return;
+//       }
 
-    if (groupCache[groupName]) {
-      console.log(`✅ Loaded Step Group: ${groupName} (${groupCache[groupName].length} steps)`);
-    } else {
-      console.warn(`⚠️  No steps found for group: ${groupName}`);
-    }
-  });
+//       // Only add non-empty lines to groupLines
+//       if (currentGroup && trimmedLine !== '') {
+//         groupLines.push(`  ${trimmedLine}`);
+//       }
+//     });
 
-  // Replace step group placeholders
-  return lines.flatMap(line => {
-    const stepGroupMatch = line.trim().match(/^\* Step Group: "@(.*?)\.steps?\.?sg?"(?:\s+"(.*)")?$/);
-    if (stepGroupMatch) {
-      const groupName = stepGroupMatch[1].trim();
-      const groupDesc = stepGroupMatch[2] ? stepGroupMatch[2].trim() : "";
-      const groupSteps = groupCache[groupName];
+//     if (groupCache[groupName]) {
+//       console.log(`✅ Loaded Step Group: ${groupName} (${groupCache[groupName].length} steps)`);
+//     } else {
+//       console.warn(`⚠️  No steps found for group: ${groupName}`);
+//     }
+//   });
 
-      if (!groupSteps) {
-        console.error(`❌ Step Group not found: ${groupName} in ${inputPath}`);
-        return [line];
-      }
+//   // Replace step group placeholders
+//   return lines.flatMap(line => {
+//     // New regex for step group line: * Step Group: -groupName- <desc>
+//     const stepGroupMatch = line.trim().match(/^\* Step Group: -([a-zA-Z0-9_\-\.]+)- <(.*)>$/);
+//     if (stepGroupMatch) {
+//       const groupName = stepGroupMatch[1].trim();
+//       const groupDesc = stepGroupMatch[2].trim();
+//       const groupSteps = groupCache[groupName];
 
-      console.log(`✅ Expanded Step Group: ${groupName} in ${inputPath}`);
-      
-      // Add START and END markers around the expanded group steps
-      return [
-        `* - Step Group - START: "@${groupName}.steps" "${groupDesc}"`,
-        ...groupSteps,
-        `* - Step Group - END: "@${groupName}.steps" "${groupDesc}"`
-      ];
-    }
+//       if (!groupSteps) {
+//         console.error(`❌ Step Group not found: ${groupName} in ${inputPath}`);
+//         return [line];
+//       }
 
-    return [line];
-  });
-}
+//       console.log(`✅ Expanded Step Group: ${groupName} in ${inputPath}`);
+//       // Add START and END markers around the expanded group steps
+//       return [
+//         `* - Step Group - START: "${groupName}" Desc: "${groupDesc}"`,
+//         ...groupSteps,
+//         `* - Step Group - END: "${groupName}"`
+//       ];
+//     }
 
-run();
+//     return [line];
+//   });
+// }
+
+// run();

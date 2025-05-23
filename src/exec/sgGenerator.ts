@@ -1,106 +1,263 @@
 import fs from 'fs';
 import path from 'path';
 
-const stepGroupDir = path.resolve('test/_step_group');
+const stepGroupDir = path.resolve('test/step_group');
 const outputFilePath = path.resolve('test/steps/_step_group/stepGroup_steps.ts');
 
-function extractStepGroups(): {
-  groupName: string;
+// Regex for valid StepGroup tag
+const stepGroupTagRegex = /^@StepGroup:([a-zA-Z0-9_]+)\.sg$/;
+const scenarioRegex = /^Scenario:\s*(.*)$/;
+const invalidScenarioRegex = /^Scenario Outline:/;
+
+type StepGroup = {
+  name: string;
   description: string;
   steps: string[];
-}[] {
-  const groupPattern = /^@<([\w\-\.]+)\/>$/;
-  const endGroupPattern = /^@<\/([\w\-\.]+)>$/;
+};
 
-  const stepGroupFiles = fs.readdirSync(stepGroupDir)
-    .filter(file => /\.(steps\.feature|step\.feature|sg\.feature|steps\.sg\.feature)$/i.test(file));
+export function extractStepGroups(fileContent: string, filename: string): StepGroup[] {
+  const lines = fileContent.split(/\r?\n/);
+  // Ensure @StepGroup tag appears before Feature declaration
+  let hasStepGroupTag = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line === '@StepGroup') {
+      hasStepGroupTag = true;
+      break;
+    }
+    if (line.startsWith('Feature:')) break; // Stop if Feature is encountered first
+  }
+  if (!hasStepGroupTag) {
+    console.warn(`⚠️ Skipping file "${filename}" — missing @StepGroup tag before Feature declaration.`);
+    return [];
+  }
 
-  const stepGroups: {
-    groupName: string;
-    description: string;
-    steps: string[];
-  }[] = [];
+  const stepGroups: StepGroup[] = [];
 
-  stepGroupFiles.forEach(file => {
-    const fullPath = path.join(stepGroupDir, file);
-    const fileContent = fs.readFileSync(fullPath, 'utf-8').trim().split('\n');
-    let currentGroup = "";
-    let groupDesc = "";
-    const groupLines: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('@StepGroup:') && !stepGroupTagRegex.test(line)) {
+      throw new Error(
+        `❌ Invalid @StepGroup tag format in file ${filename}.\n` +
+        `   → Offending line: ${line}\n` +
+        `   → Only alphanumeric and underscores are allowed in group names (e.g., @StepGroup:valid_name.sg)`
+      );
+    }
 
-    fileContent.forEach(line => {
-      const trimmedLine = line.trim();
-      const startMatch = trimmedLine.match(groupPattern);
-      const endMatch = trimmedLine.match(endGroupPattern);
+    const tagMatch = line.match(stepGroupTagRegex);
+    if (tagMatch) {
+      const rawName = tagMatch[1];
+      const groupName = `${rawName}.sg`;
 
-      if (startMatch) {
-        currentGroup = startMatch[1];
-        groupDesc = "";
-        return;
+      // Validate group name: only alphanumeric and underscores allowed
+      if (!/^[a-zA-Z0-9_]+$/.test(rawName)) {
+        throw new Error(
+          `❌ Invalid step group name "${rawName}" in file ${filename}.\n` +
+          `   → Step group names must be alphanumeric with underscores only (no spaces, dashes, or special characters).`
+        );
       }
 
-      if (trimmedLine.startsWith('@desc:') && currentGroup) {
-        groupDesc = trimmedLine.replace('@desc:', '').trim();
-        return;
-      }
+      // Skip empty lines to find Scenario
+      let j = i + 1;
+      while (j < lines.length && lines[j].trim() === '') j++;
 
-      if (endMatch && endMatch[1] === currentGroup) {
-        stepGroups.push({
-          groupName: currentGroup,
-          description: groupDesc,
-          steps: [...groupLines]
-        });
-        currentGroup = "";
-        groupDesc = "";
-        groupLines.length = 0;
-        return;
-      }
+      if (j < lines.length) {
+        const descLine = lines[j].trim();
 
-      if (currentGroup && trimmedLine !== '') {
-        groupLines.push(trimmedLine);
+        if (invalidScenarioRegex.test(descLine)) {
+          throw new Error(
+            `❌ Scenario Outline is not allowed in Step Group files.\n` +
+            `   → File: ${filename}\n` +
+            `   → Offending Line: ${j + 1}: ${descLine}`
+          );
+        }
+
+        const descMatch = descLine.match(scenarioRegex);
+        if (descMatch) {
+          const description = descMatch[1].trim();
+          // Collect steps until next @ tag or EOF
+          const steps: string[] = [];
+          let k = j + 1;
+          while (k < lines.length && !lines[k].trim().startsWith('@')) {
+            const rawLine = lines[k];
+            const stepKeywords = ['*', 'Given', 'When', 'Then', 'And', 'But'];
+            if (stepKeywords.some(keyword => rawLine.trim().startsWith(keyword))) {
+              steps.push(rawLine);
+            }
+            k++;
+          }
+          console.log(`🧪 Captured ${steps.length} steps for group: ${groupName}`);
+          stepGroups.push({ name: groupName, description, steps });
+          i = k - 1; // continue after last processed line
+        }
       }
-    });
-  });
+    }
+  }
 
   return stepGroups;
 }
 
-function generateStepDefinitions(stepGroups: {
-  groupName: string;
-  description: string;
-  steps: string[];
-}[]) {
-  const lines: string[] = [];
+function generateStepDef(group: StepGroup): string {
+  const { name, description, steps } = group;
 
-  lines.push('// ************************** IMPORTANT **************************');
-  lines.push('// This file is auto-generated by PlayQ for Step Group.');
-  lines.push('// Do not edit it manually. File is auto-generated.');
-  lines.push('// Any changes done directly will be lost on the next generation.');
-  lines.push('// ***************************************************************');
-  lines.push('');
-  lines.push("import { Given } from '@cucumber/cucumber';");
-  lines.push('');
+  const commentBlock = steps.length
+    ? [
+        `    /*StepGroup:${name}`,
+        ...steps.map(s => `    ${s.trimEnd()}`),
+        '    */'
+      ].join('\n')
+    : '    // No steps defined';
 
-  stepGroups.forEach(group => {
-    lines.push(`Given('Step Group: -${group.groupName}- -${group.description}-', async function () {`);
-    lines.push(`  console.log("Step Group: -${group.groupName}- <${group.description}>");`);
-    lines.push('});');
-    lines.push('');
-  });
-
-  fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
-  fs.writeFileSync(outputFilePath, lines.join('\n'), 'utf-8');
-  console.log(`✅ Step definitions generated: ${outputFilePath}`);
+  return `Given('Step Group: -${name}- -${description}-', async function () {
+${commentBlock}
+});`;
 }
 
 function run() {
-  const stepGroups = extractStepGroups();
-  if (stepGroups.length === 0) {
-    console.warn('⚠️  No step groups found to generate.');
-    return;
-  }
+  const files = fs.readdirSync(stepGroupDir).filter(f => f.endsWith('.feature'));
+  const allGroups: StepGroup[] = [];
 
-  generateStepDefinitions(stepGroups);
+  files.forEach(file => {
+    const fullPath = path.join(stepGroupDir, file);
+    const content = fs.readFileSync(fullPath, 'utf8');
+    const groups = extractStepGroups(content, file);
+    allGroups.push(...groups);
+  });
+
+  const groupListBlock = `/*@StepGroupList
+${JSON.stringify({ groups: allGroups.map(g => g.name) }, null, 2)}
+*/
+
+`;
+
+  const header = `// ************************** IMPORTANT **************************
+// This file is auto-generated by PlayQ for Step Group.
+// Do not edit it manually. File is auto-generated.
+// Any changes done directly will be lost on the next generation.
+// ***************************************************************
+
+import { Given } from '@cucumber/cucumber';
+
+`;
+
+  const output = groupListBlock + header + allGroups.map(generateStepDef).join('\n\n') + '\n';
+
+  fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
+  fs.writeFileSync(outputFilePath, output, 'utf8');
+
+  console.log(`✅ Generated ${allGroups.length} Step Group definitions to ${outputFilePath}`);
 }
 
-run();
+if (require.main === module) {
+  run(); // Only run if this file is the entry point (e.g., called via CLI)
+}
+
+export { run as generateStepGroups };
+
+
+// import fs from 'fs';
+// import path from 'path';
+
+// const stepGroupDir = path.resolve('test/_step_group');
+// const outputFilePath = path.resolve('test/steps/_step_group/stepGroup_steps.ts');
+
+// function extractStepGroups(): {
+//   groupName: string;
+//   description: string;
+//   steps: string[];
+// }[] {
+//   const groupPattern = /^@<([\w\-\.]+)\/>$/;
+//   const endGroupPattern = /^@<\/([\w\-\.]+)>$/;
+
+//   const stepGroupFiles = fs.readdirSync(stepGroupDir)
+//     .filter(file => /\.(steps\.feature|step\.feature|sg\.feature|steps\.sg\.feature)$/i.test(file));
+
+//   const stepGroups: {
+//     groupName: string;
+//     description: string;
+//     steps: string[];
+//   }[] = [];
+
+//   stepGroupFiles.forEach(file => {
+//     const fullPath = path.join(stepGroupDir, file);
+//     const fileContent = fs.readFileSync(fullPath, 'utf-8').trim().split('\n');
+//     let currentGroup = "";
+//     let groupDesc = "";
+//     const groupLines: string[] = [];
+
+//     fileContent.forEach(line => {
+//       const trimmedLine = line.trim();
+//       const startMatch = trimmedLine.match(groupPattern);
+//       const endMatch = trimmedLine.match(endGroupPattern);
+
+//       if (startMatch) {
+//         currentGroup = startMatch[1];
+//         groupDesc = "";
+//         return;
+//       }
+
+//       if (trimmedLine.startsWith('@desc:') && currentGroup) {
+//         groupDesc = trimmedLine.replace('@desc:', '').trim();
+//         return;
+//       }
+
+//       if (endMatch && endMatch[1] === currentGroup) {
+//         stepGroups.push({
+//           groupName: currentGroup,
+//           description: groupDesc,
+//           steps: [...groupLines]
+//         });
+//         currentGroup = "";
+//         groupDesc = "";
+//         groupLines.length = 0;
+//         return;
+//       }
+
+//       if (currentGroup && trimmedLine !== '') {
+//         groupLines.push(trimmedLine);
+//       }
+//     });
+//   });
+
+//   return stepGroups;
+// }
+
+// function generateStepDefinitions(stepGroups: {
+//   groupName: string;
+//   description: string;
+//   steps: string[];
+// }[]) {
+//   const lines: string[] = [];
+
+//   lines.push('// ************************** IMPORTANT **************************');
+//   lines.push('// This file is auto-generated by PlayQ for Step Group.');
+//   lines.push('// Do not edit it manually. File is auto-generated.');
+//   lines.push('// Any changes done directly will be lost on the next generation.');
+//   lines.push('// ***************************************************************');
+//   lines.push('');
+//   lines.push("import { Given } from '@cucumber/cucumber';");
+//   lines.push('');
+
+//   stepGroups.forEach(group => {
+//     lines.push(`Given('Step Group: -${group.groupName}- -${group.description}-', async function () {`);
+//     lines.push(`  console.log("Step Group: -${group.groupName}- <${group.description}>");`);
+//     lines.push('});');
+//     lines.push('');
+//   });
+
+//   fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
+//   fs.writeFileSync(outputFilePath, lines.join('\n'), 'utf-8');
+//   console.log(`✅ Step definitions generated: ${outputFilePath}`);
+// }
+
+// function run() {
+//   const stepGroups = extractStepGroups();
+//   if (stepGroups.length === 0) {
+//     console.warn('⚠️  No step groups found to generate.');
+//     return;
+//   }
+
+//   generateStepDefinitions(stepGroups);
+// }
+
+// run();
