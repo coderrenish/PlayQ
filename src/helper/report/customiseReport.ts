@@ -34,6 +34,18 @@ function processReport() {
     for (const scenario of feature.elements || []) {
       for (const step of scenario.steps || []) {
         updateStepName(step);
+        // Check for soft assertion failures in embeddings
+        if (
+          Array.isArray(step.embeddings) &&
+          step.embeddings.some(
+            (embed) =>
+              typeof embed.data === "string" &&
+              embed.data.includes("Soft Assertion: [Failed]")
+          )
+        ) {
+          if (!step.result) step.result = {};
+          step.result.status = "failed";
+        }
       }
     }
   }

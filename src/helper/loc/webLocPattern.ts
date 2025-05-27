@@ -355,20 +355,20 @@ async function getLocatorEntries(argType: string): Promise<string[]> {
     ? vars.replaceVariables(vars.getValue(patternVarNameSection + locSectionName))
     : "";
 
-  console.log(">> locLocation:", locLocation);
-  console.log(">> locLocationName:", locLocationName);
-  console.log(">> locLocationValue:", locLocationValue);
-  console.log(">> locSection:", locSection);
-  console.log(">> locSectionName:", locSectionName);
-  console.log(">> locSectionValue:", locSectionValue);
-  console.log(">> locFieldName:", locFieldName);
-  console.log(">> locFieldInstance:", locFieldInstance);
+  // console.log(">> locLocation:", locLocation);
+  // console.log(">> locLocationName:", locLocationName);
+  // console.log(">> locLocationValue:", locLocationValue);
+  // console.log(">> locSection:", locSection);
+  // console.log(">> locSectionName:", locSectionName);
+  // console.log(">> locSectionValue:", locSectionValue);
+  // console.log(">> locFieldName:", locFieldName);
+  // console.log(">> locFieldInstance:", locFieldInstance);
 
   if (vars.getValue(patternVarNameField + argType) == patternVarNameField + argType) {
     console.warn(`❌ No valid locators found for type "${argType}".`);
     return [];
   }
-  console.log(">>>>>>>>>>>>>> vars.getValue(patternVarNameField + argType) >>>>>>>>>>>>>>>", vars.getValue(patternVarNameField + argType));
+  // console.log(">>>>>>>>>>>>>> vars.getValue(patternVarNameField + argType) >>>>>>>>>>>>>>>", vars.getValue(patternVarNameField + argType));
   return vars.replaceVariables(vars.getValue(patternVarNameField + argType)).split(";");
 
   // const rawValue = vars.replaceVariables(vars.getValue(patternVarNameField + argType));
@@ -569,7 +569,8 @@ async function resetValues() {
 export async function webLocPattern(
   argType: string,
   argField: string,
-  argConfig?: string
+  argConfig?: string,
+  argTimeout?: number
 ): Promise<Locator> {
   await webFixture.getCurrentPage().waitForLoadState("load");
   
@@ -591,8 +592,8 @@ export async function webLocPattern(
   patternVarNameSection = "pattern." + patternFile.trim() + ".sections.";
   patternVarNameSroll = "pattern." + patternFile.trim() + ".scroll";
 
-  const timeout = 30 * 1000;
-  const interval = 2000;
+  const timeout = (argTimeout) ? argTimeout : vars.getConfigValue('patternIQ.retryTimeout') ? Number(vars.getConfigValue('patternIQ.retryTimeout')) : 30 * 1000;
+  const interval =  (vars.getConfigValue('patternIQ.retryInterval')) ? Number(vars.getConfigValue('patternIQ.retryInterval')) : 2000;
   const result = await validateLocatorLoop(timeout, interval);
   if (result && result.exists && result.visible) {
     return webFixture.getCurrentPage().locator(result.locator.toString());

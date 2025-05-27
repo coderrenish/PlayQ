@@ -10,6 +10,8 @@ let logger: Logger;
 let currentPageName = "main";
 let browser: Browser;
 let context: BrowserContext;
+let _world: any = null;
+
 
 export const webFixture = {
   pages,
@@ -57,6 +59,15 @@ export const webFixture = {
     await context?.close();
     await browser?.close();
   },
+   setWorld(world: any) {
+      _world = world;
+    },
+    getWorld(): any {
+      if (!_world) {
+        throw new Error("❌ Cucumber World context not set. Did you forget to call webFixture.setWorld(this) in your step?");
+      }
+      return _world;
+    },
   // other frame helpers remain the same
 };
 

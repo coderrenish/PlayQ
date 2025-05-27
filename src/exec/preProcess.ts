@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import csv from 'csv-parser';
 import xlsx from 'xlsx';
+import crypto from 'crypto';
 import { generateStepGroups } from './sgGenerator';
 // // Loads and caches all step group definitions from stepGroup_steps.ts
 // function loadStepGroupCache(): Record<string, { description: string; steps: string[] }> {
@@ -38,6 +39,15 @@ function loadStepGroupCache(): Record<string, { description: string; steps: stri
 }
 const args = process.argv.slice(2);
 const isForced = args.includes('--force');
+
+function sha256(content: string): string {
+  return crypto.createHash('sha256').update(content).digest('hex');
+}
+
+const featureCachePath = path.resolve('_Temp/.cache/featureMeta.json');
+const featureCache: Record<string, string> = fs.existsSync(featureCachePath)
+  ? JSON.parse(fs.readFileSync(featureCachePath, 'utf8'))
+  : {};
 
 const sourceDir = path.resolve('test/features');
 const outputDir = path.resolve('_Temp/execution');
@@ -93,7 +103,14 @@ function substituteFilter(filter: string, row: Record<string, any>): string {
   });
 }
 
-function preprocessFeatureFile(inputPath: string, outputPath: string, stepGroupCache: Record<string, { description: string; steps: string[] }>) {
+function preprocessFeatureFile(
+  inputPath: string,
+  outputPath: string,
+  stepGroupCache: Record<string, { description: string; steps: string[] }>,
+  stepGroupCacheHash: string
+) {
+  const relativePath = path.relative(sourceDir, inputPath);
+  let featureHashInput = fs.readFileSync(inputPath, 'utf-8') + stepGroupCacheHash;
   const featureText = fs.readFileSync(inputPath, 'utf-8');
   const lines = featureText.split('\n');
 
@@ -116,6 +133,8 @@ function preprocessFeatureFile(inputPath: string, outputPath: string, stepGroupC
         if (!validateIdentifiers(filter, inputPath)) {
           return;
         }
+        // Add to hash input: options for Examples
+        featureHashInput += JSON.stringify({ filter, sheetName, dataFile });
       } catch (err) {
         console.error(`❌ Failed to parse Examples JSON in ${inputPath}:\n`, err);
         return;
@@ -123,40 +142,50 @@ function preprocessFeatureFile(inputPath: string, outputPath: string, stepGroupC
     }
   });
 
-  // if (!dataFile || !filter || exampleLineIndex === -1) {
-  //   fs.writeFileSync(outputPath, featureText, 'utf-8');
-  //   return;
-  // }
-  // console.log("✔ Should generate examples");
-  //   if (!dataFile || !filter || exampleLineIndex === -1) {
-  //     const expandedLines = expandStepGroups(lines, inputPath);
+  // If there is a data file, append its content to the hash input (if it exists)
+  let fullPath = '';
+  if (dataFile) {
+    const ext = path.extname(dataFile).toLowerCase();
+    fullPath = path.join(dataDir, path.basename(dataFile));
+    if (fs.existsSync(fullPath)) {
+      // For CSV, read as utf-8; for XLSX, hash the file buffer.
+      if (ext === '.csv') {
+        featureHashInput += fs.readFileSync(fullPath, 'utf-8');
+      } else if (ext === '.xlsx') {
+        featureHashInput += fs.readFileSync(fullPath).toString('base64');
+      }
+    }
+  }
 
-  //     const outputContent = expandedLines.join('\n');
+  // Compute current hash
+  const currentHash = sha256(featureHashInput);
+  if (!isForced && featureCache[relativePath] && featureCache[relativePath] === currentHash) {
+    console.log(`⏩ Skipped (unchanged): ${relativePath}`);
+    return;
+  }
 
-  //     // Write even if nothing expanded
-  //     fs.writeFileSync(outputPath, outputContent, 'utf-8');
-  //     console.log(`📄 Preprocessed (no Examples): ${outputPath}`);
-  //     return;
-  //   }
   if (!dataFile || !filter || exampleLineIndex === -1) {
+    // No Examples, just expand step groups and write output
     console.log("📣 No Examples detected. Proceeding with step group expansion only...");
     const expandedLines = expandStepGroups(lines, inputPath, stepGroupCache);
     const outputContent = expandedLines.join('\n');
     fs.writeFileSync(outputPath, outputContent, 'utf-8');
+    featureCache[relativePath] = currentHash;
     console.log(`📄 Preprocessed (no Examples): ${outputPath}`);
     return;
   }
 
+  // Has Examples with data
   console.log("✔ Should generate examples (this line will NOT show if the block above returns)");
 
   const ext = path.extname(dataFile).toLowerCase();
-  const fullPath = path.join(dataDir, path.basename(dataFile));
   const rows: Record<string, any>[] = [];
 
   const buildExamplesFile = () => {
     if (rows.length === 0) {
       console.log(`❌ No matching rows found in ${dataFile}`);
       fs.writeFileSync(outputPath, featureText, 'utf-8');
+      featureCache[relativePath] = currentHash;
       return;
     }
 
@@ -180,6 +209,7 @@ function preprocessFeatureFile(inputPath: string, outputPath: string, stepGroupC
     const finalLines = expandedLines.join('\n');
 
     fs.writeFileSync(outputPath, finalLines, 'utf-8');
+    featureCache[relativePath] = currentHash;
     console.log(`✅ Processed: ${outputPath}`);
   };
 
@@ -213,6 +243,7 @@ function preprocessFeatureFile(inputPath: string, outputPath: string, stepGroupC
   } else {
     console.error(`❌ Unsupported file type: ${ext}`);
     fs.writeFileSync(outputPath, featureText, 'utf-8');
+    featureCache[relativePath] = currentHash;
   }
 }
 
@@ -227,6 +258,7 @@ function run() {
 
   // Load step group cache once
   const stepGroupCache = loadStepGroupCache();
+  const stepGroupCacheHash = sha256(JSON.stringify(stepGroupCache));
 
   const features = findFeatureFiles(sourceDir);
   if (!features.length) {
@@ -242,8 +274,12 @@ function run() {
     }
 
     const outPath = ensureOutputPath(featurePath);
-    preprocessFeatureFile(featurePath, outPath, stepGroupCache);
+    preprocessFeatureFile(featurePath, outPath, stepGroupCache, stepGroupCacheHash);
   });
+
+  // Save the feature cache at the end
+  fs.mkdirSync(path.dirname(featureCachePath), { recursive: true });
+  fs.writeFileSync(featureCachePath, JSON.stringify(featureCache, null, 2), 'utf8');
 }
 
 function expandStepGroups(
@@ -259,7 +295,7 @@ function expandStepGroups(
       const group = stepGroupCache[groupName];
       if (!group) {
         console.error(`❌ Step Group not found: ${groupName} (in ${inputPath})`);
-        return [line];
+        process.exit(1);
       }
       return [
         `* - Step Group - START: "${groupName}" Desc: "${group.description}"`,

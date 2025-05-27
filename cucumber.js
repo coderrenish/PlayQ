@@ -1,6 +1,6 @@
+
 module.exports = {
     default: {
-        tags: process.env.npm_config_TAGS || "",
         formatOptions: {
             snippetInterface: "async-await"
         },
@@ -16,6 +16,7 @@ module.exports = {
             "./src/helper/actions/web.ts",
             "./src/helper/addons/**/*.ts",
             "./src/helper/actions/*.ts",
+            "./src/helper/actions/hidden/*.ts",
             "./src/hooks/hooks.ts",
              "./src/hooks/stepHook.ts"
         ],

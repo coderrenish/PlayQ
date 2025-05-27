@@ -8,6 +8,13 @@ Given("Web: I open web browser with {param}", async function (url) {
   await web.goto(url);
 });
 
+// Given("Web: Open browser with url {param} -options: {param}", Web_OpenBrowser);
+// export async function Web_OpenBrowser(url: string, options: string) {
+//   const options_json = parseLooseJson(options);
+//   await web.goto(url);
+// }
+
+
 Given("Web: Fill input field {param} with value {param} options: {param}", async function (input,value,options) {
   const options_json = parseLooseJson(options);
   await web.type(input,value,options_json)

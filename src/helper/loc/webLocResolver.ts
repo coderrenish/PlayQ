@@ -1,11 +1,13 @@
 // src/helper/loc/locatorResolver.ts
+import { t } from "@faker-js/faker/dist/airline-CBNP41sR";
 import { Page, Locator } from "@playwright/test";
 import { vars, webFixture, logFixture, webLocPattern} from "@src/global";
 
 export async function webLocResolver(
     type: string,
     selector: string,
-    pattern?: string
+    overridePattern?: string,
+    timeout?: number
   ): Promise<Locator> {
     console.log(`🔍 Resolving locator: ${selector}`);
     const page = webFixture.getCurrentPage();
@@ -105,9 +107,18 @@ export async function webLocResolver(
         `❌ Unknown locator source type "${locType}". Use loc. or locator.`
       );
     }
-
+   if (overridePattern && overridePattern.toLowerCase() === '-no-check-') {
+      console.log("📍 '-no-check-' detected. Skipping locator resolution.");
+      return undefined as any; // or even better, throw a custom signal or null to trigger fallback
+    }
     // Fallback to locatorPattern (locPattern)
-    return await webLocPattern(type, selector, pattern);
+    const isPatternEnabled = String(vars.getConfigValue('patternIQ.enable')).toLowerCase().trim() === 'true';
+    console.log('PatternIQ enabled?', isPatternEnabled);
+    return isPatternEnabled
+      ? await webLocPattern(type, selector, overridePattern, timeout)
+      : webFixture.getCurrentPage().locator(selector);
+  
+  // return await webLocPattern(type, selector, pattern, timeout);
     // return await locPattern(type, selector);
   }
 

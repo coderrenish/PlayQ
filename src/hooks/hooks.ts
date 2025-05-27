@@ -3,6 +3,8 @@ import { setupEnvAndBrowser, shutdownBrowser } from './testLifecycleHooks';
 import { handleScenarioSetup } from './scenarioHooks';
 import { handleScenarioTeardown } from './supportHooks';
 import { web } from "@actions";
+import { webFixture, logFixture } from "@src/global";
+
 
 import './parameterHook';
 
@@ -13,14 +15,23 @@ BeforeAll(async function () {
 Before({ tags: 'not @auth' }, async function (ctx) {
   await handleScenarioSetup(ctx, false);
   web.setAttachFn(this.attach); 
+  webFixture.setWorld(this); //
 });
 
 Before({ tags: '@auth' }, async function (ctx) {
   await handleScenarioSetup(ctx, true);
   web.setAttachFn(this.attach); 
+  webFixture.setWorld(this); //
 });
 
 After(async function (ctx) {
+  // If any soft assertion failures were logged, mark scenario as failed
+  const world = this as any;
+  if (world.softAssertionFailed) {
+    const failedStep = world.softAssertionStep || "Unknown Step";
+    throw new Error(`❌ Soft assertion(s) failed at step: "${failedStep}" in scenario: "${ctx.pickle.name}"`);
+  }
+  
   await handleScenarioTeardown.call(this, ctx);
 });
 

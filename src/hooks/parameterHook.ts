@@ -1,7 +1,6 @@
 import { defineParameterType } from '@cucumber/cucumber';
 import { vars,faker} from '@src/global';
 
-
 defineParameterType({
   name: 'param',
   regexp: /".*?"/,
@@ -101,4 +100,7 @@ defineParameterType({
 //     return resolved;
 //   }
 // });
+
+
+
 

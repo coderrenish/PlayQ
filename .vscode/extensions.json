@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "cucumberopen.cucumber-official",       // ✅ Official Cucumber plugin
+    "esbenp.prettier-vscode",           // ✅ Prettier formatter
+    "dbaeumer.vscode-eslint",           // ✅ Linting
+    "ms-playwright.playwright"          // ✅ Playwright helper
+  ],
+  "unwantedRecommendations": [
+  ]
+}

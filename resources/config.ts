@@ -23,9 +23,14 @@ export const config = {
     maxInstances: 5, // Expected: numeric only. Default: 5
     maxRetries: 2, // Expected: numeric only. Default: 0
     retryDelay: 1000, // Expected: numeric only. Default: 1000 milliseconds (1 second)
-    retryInterval: 5000, // Expected: numeric only. Default: 5000 milliseconds (5 seconds)
+    retryInterval: 2000, // Expected: numeric only. Default: 5000 milliseconds (5 seconds)
     retryTimeout: 30000, // Expected: numeric only. Default: 30000 milliseconds (30 seconds)
     order: "sequential", // Expected: "sequential" or "random". Default: "sequential"
+  },
+  patternIQ: {
+    enable:true, // Expected: Boolean only. Default: false
+    retryInterval: 2000, // [in milliseconds] Expected: Numeric only. Default: 2000 milliseconds (2 seconds)
+    retryTimeout: 30000, // [in milliseconds] Expected: Numeric only. Default: 30000 milliseconds (30 seconds)
   },
   d365CRM: {
     version: "v9.2", // Expected: "v9.2" or "v9.2.nl". Default: "v9.2"

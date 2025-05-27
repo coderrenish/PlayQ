@@ -9,6 +9,17 @@ import { vars, webFixture,utils,faker } from "@src/global";
 import { web } from "@actions";
 import { cli } from "winston/lib/winston/config";
 import { fa } from "@faker-js/faker";
+import * as webActions from '@src/helper/actions/webActions';
+
+
+
+
+
+Given(
+  "DoE: Edit Row: {param}",  async function (url) {
+    webActions.clickButton
+
+  });
 
 Given(
   "UPORTAL-GB: Open browser and navigate to membership page {param}",
@@ -25,6 +36,7 @@ Given(
     await web.clickButton("Start Application");
     await web.clickButton("Apply manually");
     await web.waitforHeaderText("NTUC Union Membership");
+    await webActions.clickButton
 
 
     // await web.click("START APPLICATION");

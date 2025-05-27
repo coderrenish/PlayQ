@@ -1,0 +1,32 @@
+{
+  // Location of all your .feature files
+  "cucumber.features": [
+    "test/features/**/*.feature",
+    "test/step_group/*.sg.feature"
+  ],
+
+  // Locations where step definitions are found
+  "cucumber.glue": [
+    "test/steps/**/*.ts",
+    "src/helper/actions/*.ts"
+  ],
+  "cucumber.parameterTypes": [
+    {
+      "name": "param",
+      "regexp": "\".*?\""
+    }
+  ],
+
+
+  // Optional: turn off publishing to Cucumber Reports
+  "cucumber.publish": false,
+
+  // Optional: enable snippet generation for undefined steps
+  "cucumber.snippets": true,
+
+  // Optional: control the output format
+  "cucumber.format": ["html:cucumber-report.html"]
+}
+
+
+
